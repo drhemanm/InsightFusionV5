@@ -16,6 +16,12 @@ const queryClient = new QueryClient({
   },
 });
 
+// Add React Router future flags to suppress warnings
+const routerFutureFlags = {
+  v7_startTransition: true,
+  v7_relativeSplatPath: true
+};
+
 console.log('=== STARTING APP ===');
 console.log('Environment:', import.meta.env.MODE);
 console.log('Base URL:', import.meta.env.BASE_URL);
@@ -29,7 +35,7 @@ if (!root) {
   createRoot(root).render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
+        <BrowserRouter future={routerFutureFlags}>
           <ThemeProvider>
             <App />
           </ThemeProvider>

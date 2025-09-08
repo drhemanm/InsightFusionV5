@@ -59,11 +59,10 @@ class Logger {
 
   private async sendToLoggingService(entry: LogEntry): Promise<void> {
     try {
-      await fetch('/api/logs', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(entry)
-      });
+      // In production, only log to console since we don't have a logging API endpoint
+      if (entry.level === 'error' || entry.level === 'warn') {
+        console[entry.level](`[${entry.level.toUpperCase()}] ${entry.message}`, entry.context);
+      }
     } catch (error) {
       console.error('Failed to send log to service:', error);
     }
