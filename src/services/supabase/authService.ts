@@ -5,20 +5,29 @@ import type { User } from '../../types/auth';
 export class SupabaseAuthService {
   static async signInWithGoogle(): Promise<{ success: boolean; user?: User; error?: string }> {
     try {
+      console.log('🔐 Starting Google OAuth...');
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`
+          redirectTo: `${window.location.origin}/dashboard`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent'
+          }
         }
       });
 
       if (error) {
+        console.error('❌ Google OAuth error:', error);
         logger.error('Google sign in failed', { error });
         return { success: false, error: error.message };
       }
 
+      console.log('✅ Google OAuth initiated successfully');
       return { success: true };
     } catch (error: any) {
+      console.error('❌ Google sign in exception:', error);
       logger.error('Google sign in error', { error });
       return { success: false, error: error.message };
     }
@@ -26,23 +35,29 @@ export class SupabaseAuthService {
 
   static async signInWithEmail(email: string, password: string): Promise<{ success: boolean; user?: User; error?: string }> {
     try {
+      console.log('🔐 Starting email login for:', email);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
 
       if (error) {
+        console.error('❌ Email login error:', error);
         logger.error('Email sign in failed', { error });
         return { success: false, error: error.message };
       }
 
       if (data.user) {
+        console.log('✅ Email login successful for:', data.user.email);
         const user = this.transformSupabaseUser(data.user);
         return { success: true, user };
       }
 
+      console.error('❌ No user data received');
       return { success: false, error: 'No user data received' };
     } catch (error: any) {
+      console.error('❌ Email login exception:', error);
       logger.error('Email sign in error', { error });
       return { success: false, error: error.message };
     }
@@ -50,6 +65,8 @@ export class SupabaseAuthService {
 
   static async signUp(email: string, password: string, metadata: any): Promise<{ success: boolean; user?: User; error?: string }> {
     try {
+      console.log('🔐 Starting user registration for:', email);
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -59,17 +76,21 @@ export class SupabaseAuthService {
       });
 
       if (error) {
+        console.error('❌ Registration error:', error);
         logger.error('Sign up failed', { error });
         return { success: false, error: error.message };
       }
 
       if (data.user) {
+        console.log('✅ Registration successful for:', data.user.email);
         const user = this.transformSupabaseUser(data.user);
         return { success: true, user };
       }
 
+      console.error('❌ No user data received during registration');
       return { success: false, error: 'No user data received' };
     } catch (error: any) {
+      console.error('❌ Registration exception:', error);
       logger.error('Sign up error', { error });
       return { success: false, error: error.message };
     }

@@ -25,7 +25,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   loginWithGoogle: async () => {
     set({ isLoading: true, error: null });
     try {
-      console.log('Starting Google OAuth...');
+      console.log('🚀 Initiating Google OAuth flow...');
       const result = await SupabaseAuthService.signInWithGoogle();
       
       if (result.success) {
@@ -36,10 +36,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             isLoading: false 
           });
         }
-        console.log('Google OAuth initiated successfully');
+        console.log('✅ Google OAuth flow started successfully');
         return { success: true };
       } else {
-        console.error('Google OAuth failed:', result.error);
+        console.error('❌ Google OAuth failed:', result.error);
         set({ 
           error: result.error || 'Google sign in failed',
           isLoading: false 
@@ -47,7 +47,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         return { success: false };
       }
     } catch (error: any) {
-      console.error('Google sign in error:', error);
+      console.error('❌ Google sign in exception:', error);
       logger.error('Google sign in failed', { error });
       set({ 
         error: 'Failed to sign in with Google',
@@ -60,11 +60,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   loginWithEmail: async (email: string, password: string) => {
     set({ isLoading: true, error: null });
     try {
-      console.log('Starting email login for:', email);
+      console.log('🔐 Starting email authentication for:', email);
       const result = await SupabaseAuthService.signInWithEmail(email, password);
       
       if (result.success && result.user) {
-        console.log('Email login successful:', result.user.email);
+        console.log('✅ Email authentication successful:', result.user.email);
         set({ 
           user: result.user,
           isAuthenticated: true,
@@ -72,7 +72,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         });
         return true;
       } else {
-        console.error('Email login failed:', result.error);
+        console.error('❌ Email authentication failed:', result.error);
         set({ 
           error: result.error || 'Login failed',
           isLoading: false 
@@ -80,7 +80,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         return false;
       }
     } catch (error: any) {
-      console.error('Email login error:', error);
+      console.error('❌ Email authentication exception:', error);
       logger.error('Email login failed', { error });
       set({ 
         error: 'Login failed',
@@ -93,6 +93,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   register: async (email: string, password: string, firstName: string, lastName: string) => {
     set({ isLoading: true, error: null });
     try {
+      console.log('📝 Starting user registration for:', email);
       const result = await SupabaseAuthService.signUp(email, password, {
         firstName,
         lastName,
@@ -100,9 +101,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       });
       
       if (result.success) {
+        console.log('✅ Registration successful');
         set({ isLoading: false });
         return true;
       } else {
+        console.error('❌ Registration failed:', result.error);
         set({ 
           error: result.error || 'Registration failed',
           isLoading: false 
@@ -110,6 +113,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         return false;
       }
     } catch (error: any) {
+      console.error('❌ Registration exception:', error);
       logger.error('Registration failed', { error });
       set({ 
         error: 'Registration failed',
@@ -121,6 +125,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   logout: async () => {
     try {
+      console.log('🚪 Logging out user...');
       await SupabaseAuthService.signOut();
       set({ 
         user: null, 
@@ -128,7 +133,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isLoading: false,
         error: null 
       });
+      console.log('✅ Logout successful');
     } catch (error) {
+      console.error('❌ Logout failed:', error);
       logger.error('Logout failed', { error });
     }
   },
