@@ -1,5 +1,5 @@
-import React from 'react';
-import { Routes, Route, Navigate, useEffect } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { supabase } from './config/supabase';
 import { useAuthStore } from './store/authStore';
 import { Header } from './components/layout/Header';
