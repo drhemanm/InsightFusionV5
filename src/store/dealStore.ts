@@ -1,6 +1,5 @@
 import { create } from 'zustand';
-import { dealQueries } from '../services/firebase/collections/dealQueries';
-import { dealMutations } from '../services/firebase/collections/dealMutations';
+import { SupabaseDealService } from '../services/supabase/dealService';
 import { logger } from '../utils/monitoring/logger';
 import type { Deal } from '../types/deals';
 
@@ -22,11 +21,9 @@ export const useDealStore = create<DealStore>((set) => ({
   error: null,
 
   fetchDeals: async () => {
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
     try {
-      const today = new Date();
-      const thirtyDaysAgo = new Date(today.setDate(today.getDate() - 30));
-      const deals = await dealQueries.getByDateRange(thirtyDaysAgo, new Date());
+      const deals = await SupabaseDealService.getDeals();
       set({ deals, isLoading: false });
     } catch (error) {
       logger.error('Failed to fetch deals', { error });
@@ -35,9 +32,9 @@ export const useDealStore = create<DealStore>((set) => ({
   },
 
   addDeal: async (dealData) => {
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
     try {
-      const newDeal = await dealMutations.create(dealData);
+      const newDeal = await SupabaseDealService.createDeal(dealData);
       set(state => ({
         deals: [newDeal, ...state.deals],
         isLoading: false
@@ -51,9 +48,9 @@ export const useDealStore = create<DealStore>((set) => ({
   },
 
   updateDeal: async (id, updates) => {
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
     try {
-      await dealMutations.update(id, updates);
+      await SupabaseDealService.updateDeal(id, updates);
       set(state => ({
         deals: state.deals.map(deal =>
           deal.id === id ? { ...deal, ...updates } : deal
@@ -68,9 +65,9 @@ export const useDealStore = create<DealStore>((set) => ({
   },
 
   deleteDeal: async (id) => {
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
     try {
-      await dealMutations.delete(id);
+      await SupabaseDealService.deleteDeal(id);
       set(state => ({
         deals: state.deals.filter(deal => deal.id !== id),
         isLoading: false
@@ -83,10 +80,20 @@ export const useDealStore = create<DealStore>((set) => ({
   },
 
   filterByStage: async (stage) => {
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
     try {
-      const deals = await dealQueries.getByStage(stage);
-      set({ deals, isLoading: false });
+      const { data: deals, error } = await supabase
+        .from('deals')
+        .select('*')
+        .eq('stage', stage)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      set({ 
+        deals: deals.map(SupabaseDealService.transformDeal), 
+        isLoading: false 
+      });
     } catch (error) {
       logger.error('Failed to filter deals by stage', { error });
       set({ error: 'Failed to filter deals', isLoading: false });
@@ -94,10 +101,20 @@ export const useDealStore = create<DealStore>((set) => ({
   },
 
   filterByAssignee: async (userId) => {
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
     try {
-      const deals = await dealQueries.getByAssignee(userId);
-      set({ deals, isLoading: false });
+      const { data: deals, error } = await supabase
+        .from('deals')
+        .select('*')
+        .eq('assigned_to', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      set({ 
+        deals: deals.map(SupabaseDealService.transformDeal), 
+        isLoading: false 
+      });
     } catch (error) {
       logger.error('Failed to filter deals by assignee', { error });
       set({ error: 'Failed to filter deals', isLoading: false });

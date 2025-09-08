@@ -1,5 +1,7 @@
 import { create } from 'zustand';
-import type { Contact } from '../types';
+import { SupabaseContactService } from '../services/supabase/contactService';
+import { logger } from '../utils/monitoring/logger';
+import type { Contact } from '../types/contacts';
 
 interface ContactStore {
   contacts: Contact[];
@@ -7,7 +9,7 @@ interface ContactStore {
   isLoading: boolean;
   error: string | null;
   fetchContacts: () => Promise<void>;
-  addContact: (contact: Omit<Contact, 'id' | 'socialProfiles' | 'tags'> & { tags?: string[] }) => Promise<void>;
+  addContact: (contact: Omit<Contact, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   updateContact: (id: string, updates: Partial<Contact>) => Promise<void>;
   deleteContact: (id: string) => Promise<void>;
   setSelectedContact: (contact: Contact | null) => void;
@@ -20,39 +22,35 @@ export const useContactStore = create<ContactStore>((set, get) => ({
   error: null,
 
   fetchContacts: async () => {
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
     try {
-      // In production, fetch from API
-      set({ contacts: [], isLoading: false });
+      const contacts = await SupabaseContactService.getContacts();
+      set({ contacts, isLoading: false });
     } catch (error) {
+      logger.error('Failed to fetch contacts', { error });
       set({ error: 'Failed to fetch contacts', isLoading: false });
     }
   },
 
   addContact: async (contactData) => {
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
     try {
-      // In production, make API call
-      const newContact: Contact = {
-        id: crypto.randomUUID(),
-        ...contactData,
-        tags: contactData.tags || [],
-        socialProfiles: {},
-        lastContactedAt: new Date()
-      };
-
+      const newContact = await SupabaseContactService.createContact(contactData);
       set(state => ({
-        contacts: [...state.contacts, newContact],
+        contacts: [newContact, ...state.contacts],
         isLoading: false
       }));
     } catch (error) {
+      logger.error('Failed to add contact', { error });
       set({ error: 'Failed to add contact', isLoading: false });
+      throw error;
     }
   },
 
   updateContact: async (id, updates) => {
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
     try {
+      await SupabaseContactService.updateContact(id, updates);
       set(state => ({
         contacts: state.contacts.map(contact =>
           contact.id === id ? { ...contact, ...updates } : contact
@@ -60,19 +58,24 @@ export const useContactStore = create<ContactStore>((set, get) => ({
         isLoading: false
       }));
     } catch (error) {
+      logger.error('Failed to update contact', { error });
       set({ error: 'Failed to update contact', isLoading: false });
+      throw error;
     }
   },
 
   deleteContact: async (id) => {
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
     try {
+      await SupabaseContactService.deleteContact(id);
       set(state => ({
         contacts: state.contacts.filter(contact => contact.id !== id),
         isLoading: false
       }));
     } catch (error) {
+      logger.error('Failed to delete contact', { error });
       set({ error: 'Failed to delete contact', isLoading: false });
+      throw error;
     }
   },
 

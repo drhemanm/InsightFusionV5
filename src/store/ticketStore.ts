@@ -1,6 +1,5 @@
 import { create } from 'zustand';
-import { ticketService } from '../services/tickets/TicketService';
-import { TicketIdGenerator } from '../utils/tickets/ticketIdGenerator';
+import { SupabaseTicketService } from '../services/supabase/ticketService';
 import { logger } from '../utils/monitoring/logger';
 import type { Ticket } from '../types/tickets';
 
@@ -21,9 +20,9 @@ export const useTicketStore = create<TicketStore>((set) => ({
   error: null,
 
   fetchTickets: async () => {
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
     try {
-      const tickets = await ticketService.getAllTickets();
+      const tickets = await SupabaseTicketService.getTickets();
       set({ tickets, isLoading: false });
     } catch (error) {
       logger.error('Failed to fetch tickets', { error });
@@ -32,15 +31,9 @@ export const useTicketStore = create<TicketStore>((set) => ({
   },
 
   createTicket: async (ticketData) => {
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
     try {
-      const ticketId = TicketIdGenerator.generateTicketId();
-      const ticket = await ticketService.createTicket({
-        ...ticketData,
-        ticketId,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      });
+      const ticket = await SupabaseTicketService.createTicket(ticketData);
       set(state => ({
         tickets: [ticket, ...state.tickets],
         isLoading: false
@@ -54,9 +47,9 @@ export const useTicketStore = create<TicketStore>((set) => ({
   },
 
   updateTicket: async (id, updates) => {
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
     try {
-      await ticketService.updateTicket(id, updates);
+      await SupabaseTicketService.updateTicket(id, updates);
       set(state => ({
         tickets: state.tickets.map(ticket =>
           ticket.id === id ? { ...ticket, ...updates } : ticket
@@ -71,9 +64,15 @@ export const useTicketStore = create<TicketStore>((set) => ({
   },
 
   deleteTicket: async (id) => {
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
     try {
-      await ticketService.deleteTicket(id);
+      const { error } = await supabase
+        .from('tickets')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
       set(state => ({
         tickets: state.tickets.filter(ticket => ticket.id !== id),
         isLoading: false
@@ -86,10 +85,24 @@ export const useTicketStore = create<TicketStore>((set) => ({
   },
 
   filterTickets: async (filters) => {
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
     try {
-      const tickets = await ticketService.filterTickets(filters);
-      set({ tickets, isLoading: false });
+      let query = supabase.from('tickets').select('*');
+
+      Object.entries(filters).forEach(([field, value]) => {
+        if (value) {
+          query = query.eq(field, value);
+        }
+      });
+
+      const { data: tickets, error } = await query.order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      set({ 
+        tickets: tickets.map(SupabaseTicketService.transformTicket), 
+        isLoading: false 
+      });
     } catch (error) {
       logger.error('Failed to filter tickets', { error });
       set({ error: 'Failed to filter tickets', isLoading: false });

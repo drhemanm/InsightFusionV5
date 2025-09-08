@@ -1,6 +1,5 @@
 import { create } from 'zustand';
-import { GoogleAuthProvider, signInWithPopup, signInWithRedirect } from 'firebase/auth';
-import { auth } from '../services/firebase/firebaseConfig';
+import { SupabaseAuthService } from '../services/supabase/authService';
 import { logger } from '../utils/monitoring/logger';
 import type { User } from '../types/auth';
 
@@ -10,10 +9,14 @@ interface AuthState {
   isLoading: boolean;
   error: string | null;
   loginWithGoogle: () => Promise<{ success: boolean; redirected?: boolean }>;
-  logout: () => void;
+  loginWithEmail: (email: string, password: string) => Promise<boolean>;
+  register: (email: string, password: string, firstName: string, lastName: string) => Promise<boolean>;
+  logout: () => Promise<void>;
+  setUser: (user: User) => void;
+  clearUser: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isAuthenticated: false,
   isLoading: false,
@@ -22,76 +25,106 @@ export const useAuthStore = create<AuthState>((set) => ({
   loginWithGoogle: async () => {
     set({ isLoading: true, error: null });
     try {
-      // Check if running in development
-      if (import.meta.env.DEV && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      const result = await SupabaseAuthService.signInWithGoogle();
+      
+      if (result.success) {
+        if (result.user) {
+          set({ 
+            user: result.user,
+            isAuthenticated: true,
+            isLoading: false 
+          });
+        }
+        return { success: true };
+      } else {
         set({ 
-          error: 'Please access the application through the official URL or localhost',
+          error: result.error || 'Google sign in failed',
           isLoading: false 
         });
         return { success: false };
       }
-
-      const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({
-        prompt: 'select_account'
-      });
-      
-      // Try popup first
-      try {
-        const result = await signInWithPopup(auth, provider);
-        if (!result.user) {
-          throw new Error('No user data received');
-        }
-
-        const user: User = {
-          id: result.user.uid,
-          email: result.user.email!,
-          firstName: result.user.displayName?.split(' ')[0] || 'User',
-          lastName: result.user.displayName?.split(' ').slice(1).join(' ') || '',
-          role: 'user',
-          organizationId: 'default',
-          isEmailVerified: result.user.emailVerified,
-          twoFactorEnabled: false
-        };
-
-        set({ 
-          user,
-          isAuthenticated: true,
-          isLoading: false 
-        });
-
-        return { success: true };
-      } catch (error: any) {
-        // If popup blocked, fallback to redirect
-        if (error.code === 'auth/popup-blocked') {
-          await signInWithRedirect(auth, provider);
-          return { success: false, redirected: true };
-        }
-        throw error;
-      }
     } catch (error: any) {
       logger.error('Google sign in failed', { error });
-      let errorMessage = 'Failed to sign in with Google';
-      
-      if (error.code === 'auth/unauthorized-domain') {
-        errorMessage = 'Please access the application through the official URL';
-      }
-
       set({ 
-        error: errorMessage,
+        error: 'Failed to sign in with Google',
         isLoading: false 
       });
       return { success: false };
     }
   },
 
-  logout: () => {
-    auth.signOut();
-    set({ 
-      user: null, 
-      isAuthenticated: false,
-      isLoading: false,
-      error: null 
-    });
-  }
+  loginWithEmail: async (email: string, password: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const result = await SupabaseAuthService.signInWithEmail(email, password);
+      
+      if (result.success && result.user) {
+        set({ 
+          user: result.user,
+          isAuthenticated: true,
+          isLoading: false 
+        });
+        return true;
+      } else {
+        set({ 
+          error: result.error || 'Login failed',
+          isLoading: false 
+        });
+        return false;
+      }
+    } catch (error: any) {
+      logger.error('Email login failed', { error });
+      set({ 
+        error: 'Login failed',
+        isLoading: false 
+      });
+      return false;
+    }
+  },
+
+  register: async (email: string, password: string, firstName: string, lastName: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const result = await SupabaseAuthService.signUp(email, password, {
+        firstName,
+        lastName,
+        role: 'user'
+      });
+      
+      if (result.success) {
+        set({ isLoading: false });
+        return true;
+      } else {
+        set({ 
+          error: result.error || 'Registration failed',
+          isLoading: false 
+        });
+        return false;
+      }
+    } catch (error: any) {
+      logger.error('Registration failed', { error });
+      set({ 
+        error: 'Registration failed',
+        isLoading: false 
+      });
+      return false;
+    }
+  },
+
+  logout: async () => {
+    try {
+      await SupabaseAuthService.signOut();
+      set({ 
+        user: null, 
+        isAuthenticated: false,
+        isLoading: false,
+        error: null 
+      });
+    } catch (error) {
+      logger.error('Logout failed', { error });
+    }
+  },
+
+  setUser: (user) => set({ user, isAuthenticated: true }),
+  clearUser: () => set({ user: null, isAuthenticated: false })
 }));
