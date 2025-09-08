@@ -46,26 +46,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   }
 });
 
-// Test Supabase connection
-const testConnection = async () => {
-  try {
-    console.log('Testing Supabase connection...');
-    const { data, error } = await supabase.from('users').select('count').limit(1);
-    if (error) {
-      console.error('❌ Supabase connection test failed:', error.message);
-    } else {
-      console.log('✅ Supabase connection successful');
-    }
-  } catch (error) {
-    console.error('❌ Supabase connection error:', error);
-  }
-};
-
-// Test connection in development
-if (import.meta.env.DEV) {
-  testConnection();
-}
-
 // Auth state listener with better error handling
 supabase.auth.onAuthStateChange((event, session) => {
   console.log('🔐 Auth state changed:', event);
