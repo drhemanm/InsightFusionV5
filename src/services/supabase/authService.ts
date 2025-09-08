@@ -14,7 +14,7 @@ export class SupabaseAuthService {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: redirectUrl,
+          redirectTo: 'https://insight-fusion-v5.vercel.app/dashboard',
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',

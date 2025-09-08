@@ -8,7 +8,7 @@ class CalendarIntegrationService {
     try {
       // Initialize Google OAuth client
       const clientId = import.meta.env.VITE_AUTH0_CLIENT_ID;
-      const redirectUri = `${window.location.origin}/auth/callback`;
+      const redirectUri = 'https://insight-fusion-v5.vercel.app/auth/callback';
       
       // Construct OAuth URL
       const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
