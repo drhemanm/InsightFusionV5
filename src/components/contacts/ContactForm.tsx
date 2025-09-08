@@ -2,9 +2,9 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Building2, Mail, Phone, MapPin, DollarSign, Users, Briefcase } from 'lucide-react';
-import { ContactSchema, type Contact } from '../../types/crm';
+import { ContactSchema, type Contact } from '../../types/contacts';
 import { FormField } from '../ui/FormField';
-import { SelectField } from '../ui/SelectField';
+import { FormSelect } from '../ui/FormSelect';
 
 interface ContactFormProps {
   initialData?: Partial<Contact>;
@@ -225,23 +225,22 @@ export const ContactForm: React.FC<ContactFormProps> = ({
             { value: 'cold_call', label: 'Cold Call' },
             { value: 'other', label: 'Other' }
           ]}
-          {...register('leadSource')}
+          value={form.watch('source') || ''}
+          onChange={(e) => form.setValue('source', e.target.value)}
         />
 
-        <SelectField
+        <FormSelect
           label="Lead Status"
-          error={errors.leadStatus?.message}
+          error={errors.type?.message}
           required
           options={[
-            { value: 'new', label: 'New' },
-            { value: 'contacted', label: 'Contacted' },
-            { value: 'qualified', label: 'Qualified' },
-            { value: 'proposal', label: 'Proposal' },
-            { value: 'negotiation', label: 'Negotiation' },
-            { value: 'closed_won', label: 'Closed Won' },
-            { value: 'closed_lost', label: 'Closed Lost' }
+            { value: 'lead', label: 'Lead' },
+            { value: 'customer', label: 'Customer' },
+            { value: 'partner', label: 'Partner' },
+            { value: 'supplier', label: 'Supplier' }
           ]}
-          {...register('leadStatus')}
+          value={form.watch('type') || ''}
+          onChange={(e) => form.setValue('type', e.target.value)}
         />
       </div>
 
@@ -261,9 +260,8 @@ export const ContactForm: React.FC<ContactFormProps> = ({
           />
         </FormField>
 
-        <SelectField
+        <FormSelect
           label="Company Size"
-          error={errors.companySize?.message}
           required
           icon={<Users className="text-gray-400" size={20} />}
           options={[
@@ -275,12 +273,12 @@ export const ContactForm: React.FC<ContactFormProps> = ({
             { value: '1001-5000', label: '1001-5000 employees' },
             { value: '5000+', label: '5000+ employees' }
           ]}
-          {...register('companySize')}
+          value={form.watch('customFields.companySize') || ''}
+          onChange={(e) => form.setValue('customFields.companySize', e.target.value)}
         />
 
-        <SelectField
+        <FormSelect
           label="Annual Revenue"
-          error={errors.annualRevenue?.message}
           required
           icon={<DollarSign className="text-gray-400" size={20} />}
           options={[
@@ -291,7 +289,8 @@ export const ContactForm: React.FC<ContactFormProps> = ({
             { value: '50m_100m', label: '$50M - $100M' },
             { value: 'over_100m', label: 'Over $100M' }
           ]}
-          {...register('annualRevenue')}
+          value={form.watch('customFields.annualRevenue') || ''}
+          onChange={(e) => form.setValue('customFields.annualRevenue', e.target.value)}
         />
       </div>
 

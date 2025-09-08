@@ -1,6 +1,5 @@
 import { create } from 'zustand';
-import { collection, doc, setDoc, getDoc, updateDoc, deleteDoc, query, where, getDocs } from 'firebase/firestore';
-import { db } from '../config/firebase';
+import { supabase } from '../config/supabase';
 import { logger } from '../utils/monitoring/logger';
 import type { Campaign, CampaignTarget } from '../types/campaigns';
 
@@ -19,9 +18,6 @@ interface CampaignStore {
   removeCampaignTarget: (campaignId: string, targetId: string) => Promise<void>;
 }
 
-const campaignsRef = collection(db, 'campaigns');
-const campaignTargetsRef = collection(db, 'campaign_targets');
-
 export const useCampaignStore = create<CampaignStore>((set, get) => ({
   campaigns: [],
   selectedCampaign: null,
@@ -31,13 +27,14 @@ export const useCampaignStore = create<CampaignStore>((set, get) => ({
   fetchCampaigns: async () => {
     set({ isLoading: true });
     try {
-      const snapshot = await getDocs(campaignsRef);
-      const campaigns = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Campaign[];
+      const { data: campaigns, error } = await supabase
+        .from('campaigns')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
       
-      set({ campaigns, isLoading: false });
+      set({ campaigns: campaigns || [], isLoading: false });
     } catch (error) {
       logger.error('Failed to fetch campaigns', { error });
       set({ error: 'Failed to fetch campaigns', isLoading: false });
@@ -47,22 +44,39 @@ export const useCampaignStore = create<CampaignStore>((set, get) => ({
   createCampaign: async (data) => {
     set({ isLoading: true });
     try {
-      const docRef = doc(campaignsRef);
-      const campaign: Campaign = {
+      const { data: campaign, error } = await supabase
+        .from('campaigns')
+        .insert([{
+          name: data.name,
+          type: data.type,
+          description: data.description,
+          budget: data.budget,
+          start_date: data.startDate.toISOString(),
+          end_date: data.endDate.toISOString(),
+          status: data.status,
+          created_by: data.createdBy,
+          manager_id: data.managerId,
+          kpis: data.kpis,
+          metrics: data.metrics
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const newCampaign: Campaign = {
         ...data,
-        id: docRef.id,
+        id: campaign.id,
         createdAt: new Date(),
         updatedAt: new Date()
       };
 
-      await setDoc(docRef, campaign);
-      
       set(state => ({
-        campaigns: [...state.campaigns, campaign],
+        campaigns: [...state.campaigns, newCampaign],
         isLoading: false
       }));
 
-      return campaign;
+      return newCampaign;
     } catch (error) {
       logger.error('Failed to create campaign', { error });
       set({ error: 'Failed to create campaign', isLoading: false });
@@ -73,11 +87,24 @@ export const useCampaignStore = create<CampaignStore>((set, get) => ({
   updateCampaign: async (id, updates) => {
     set({ isLoading: true });
     try {
-      const docRef = doc(campaignsRef, id);
-      await updateDoc(docRef, {
-        ...updates,
-        updatedAt: new Date()
-      });
+      const { error } = await supabase
+        .from('campaigns')
+        .update({
+          name: updates.name,
+          type: updates.type,
+          description: updates.description,
+          budget: updates.budget,
+          start_date: updates.startDate?.toISOString(),
+          end_date: updates.endDate?.toISOString(),
+          status: updates.status,
+          manager_id: updates.managerId,
+          kpis: updates.kpis,
+          metrics: updates.metrics,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
+
+      if (error) throw error;
 
       set(state => ({
         campaigns: state.campaigns.map(campaign =>
@@ -97,7 +124,12 @@ export const useCampaignStore = create<CampaignStore>((set, get) => ({
   deleteCampaign: async (id) => {
     set({ isLoading: true });
     try {
-      await deleteDoc(doc(campaignsRef, id));
+      const { error } = await supabase
+        .from('campaigns')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
       
       set(state => ({
         campaigns: state.campaigns.filter(campaign => campaign.id !== id),
@@ -112,16 +144,17 @@ export const useCampaignStore = create<CampaignStore>((set, get) => ({
 
   addCampaignTarget: async (campaignId, target) => {
     try {
-      const docRef = doc(campaignTargetsRef);
-      const campaignTarget: CampaignTarget = {
-        ...target,
-        id: docRef.id,
-        campaignId,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
+      const { error } = await supabase
+        .from('campaign_targets')
+        .insert([{
+          campaign_id: campaignId,
+          target_type: target.targetType,
+          target_id: target.targetId,
+          status: target.status,
+          notes: target.notes
+        }]);
 
-      await setDoc(docRef, campaignTarget);
+      if (error) throw error;
     } catch (error) {
       logger.error('Failed to add campaign target', { error });
       throw error;
@@ -130,11 +163,16 @@ export const useCampaignStore = create<CampaignStore>((set, get) => ({
 
   updateCampaignTarget: async (campaignId, targetId, updates) => {
     try {
-      const docRef = doc(campaignTargetsRef, targetId);
-      await updateDoc(docRef, {
-        ...updates,
-        updatedAt: new Date()
-      });
+      const { error } = await supabase
+        .from('campaign_targets')
+        .update({
+          status: updates.status,
+          notes: updates.notes,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', targetId);
+
+      if (error) throw error;
     } catch (error) {
       logger.error('Failed to update campaign target', { error });
       throw error;
@@ -143,7 +181,12 @@ export const useCampaignStore = create<CampaignStore>((set, get) => ({
 
   removeCampaignTarget: async (campaignId, targetId) => {
     try {
-      await deleteDoc(doc(campaignTargetsRef, targetId));
+      const { error } = await supabase
+        .from('campaign_targets')
+        .delete()
+        .eq('id', targetId);
+
+      if (error) throw error;
     } catch (error) {
       logger.error('Failed to remove campaign target', { error });
       throw error;
