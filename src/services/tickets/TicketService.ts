@@ -1,13 +1,9 @@
-import { collection, doc, setDoc, getDoc, updateDoc, deleteDoc, query, where, getDocs, orderBy } from 'firebase/firestore';
-import { db } from '../../config/firebase';
+import { supabase } from '../../config/supabase';
 import { TicketSchema } from '../../types/tickets';
 import { slaService } from './SLAService';
 import { notificationService } from '../notification/NotificationService';
 import { logger } from '../../utils/monitoring/logger';
 import type { Ticket } from '../../types/tickets';
-
-const COLLECTION = 'tickets';
-const ticketsRef = collection(db, COLLECTION);
 
 class TicketService {
   private static instance: TicketService;
@@ -27,24 +23,39 @@ class TicketService {
       // Calculate SLA
       const sla = await slaService.calculateSLA(validatedData.priority);
 
-      // Create new document reference
-      const docRef = doc(ticketsRef);
-      const ticket = {
+      // Create ticket using Supabase
+      const { data: ticket, error } = await supabase
+        .from('tickets')
+        .insert([{
+          subject: validatedData.subject,
+          description: validatedData.description,
+          category: validatedData.category,
+          priority: validatedData.priority,
+          status: validatedData.status,
+          assigned_to: validatedData.assignedTo,
+          contact_id: validatedData.contactId,
+          organization_id: validatedData.organizationId,
+          resolution_notes: validatedData.resolutionNotes,
+          attachments: validatedData.attachments || []
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const newTicket = {
         ...validatedData,
-        id: docRef.id,
+        id: ticket.id,
         sla,
         createdAt: new Date(),
         updatedAt: new Date()
       };
 
-      // Save to Firestore
-      await setDoc(docRef, ticket);
-
       // Send notifications
-      await this.sendTicketNotifications('created', ticket);
+      await this.sendTicketNotifications('created', newTicket);
 
-      logger.info('Ticket created successfully', { ticketId: ticket.id });
-      return ticket;
+      logger.info('Ticket created successfully', { ticketId: newTicket.id });
+      return newTicket;
     } catch (error) {
       logger.error('Failed to create ticket', { error });
       throw error;

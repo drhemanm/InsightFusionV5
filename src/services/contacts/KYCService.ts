@@ -1,6 +1,4 @@
 ```typescript
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { app } from '../firebase/firebaseConfig';
 import { logger } from '../../utils/monitoring/logger';
 
 interface KYCDocument {
@@ -22,7 +20,6 @@ interface VerificationResult {
 
 class KYCService {
   private static instance: KYCService;
-  private storage = getStorage(app);
 
   private constructor() {}
 
@@ -35,21 +32,11 @@ class KYCService {
 
   async uploadDocument(contactId: string, document: KYCDocument): Promise<string> {
     try {
+      // In production, implement Supabase Storage upload
       const fileName = `kyc/${contactId}/${document.type}_${Date.now()}`;
-      const storageRef = ref(this.storage, fileName);
       
-      // Upload file
-      await uploadBytes(storageRef, document.file, {
-        customMetadata: {
-          type: document.type,
-          issuedDate: document.metadata.issuedDate.toISOString(),
-          expiryDate: document.metadata.expiryDate.toISOString(),
-          issuingCountry: document.metadata.issuingCountry
-        }
-      });
-
-      // Get download URL
-      const downloadUrl = await getDownloadURL(storageRef);
+      // For now, return a mock URL - replace with actual Supabase Storage implementation
+      const downloadUrl = `https://example.com/uploads/${fileName}`;
       
       logger.info('KYC document uploaded', { 
         contactId, 

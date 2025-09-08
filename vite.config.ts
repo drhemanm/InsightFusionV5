@@ -11,7 +11,6 @@ export default defineConfig({
           vendor: ['react', 'react-dom', 'react-router-dom'],
           ui: ['lucide-react', '@tanstack/react-query'],
           charts: ['recharts'],
-          firebase: ['firebase'],
           forms: ['react-hook-form', '@hookform/resolvers', 'zod'],
           utils: ['date-fns', 'zustand']
         }
