@@ -33,10 +33,10 @@ class KYCService {
   async uploadDocument(contactId: string, document: KYCDocument): Promise<string> {
     try {
       // In production, implement Supabase Storage upload
-      const fileName = `kyc/${contactId}/${document.type}_${Date.now()}`;
+      const fileName = \`kyc/${contactId}/${document.type}_${Date.now()}`;
       
       // For now, return a mock URL - replace with actual Supabase Storage implementation
-      const downloadUrl = `https://example.com/uploads/${fileName}`;
+      const downloadUrl = \`https://example.com/uploads/${fileName}`;
       
       logger.info('KYC document uploaded', { 
         contactId, 
