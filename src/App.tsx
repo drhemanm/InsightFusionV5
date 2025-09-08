@@ -4,6 +4,7 @@ import { useAuthStore } from './store/authStore';
 import { Header } from './components/layout/Header';
 import { LoginForm } from './components/auth/LoginForm';
 import { RegisterForm } from './components/auth/RegisterForm';
+import { LandingPage } from './components/auth/LandingPage';
 import { PrivateRoute } from './components/auth/PrivateRoute';
 
 // Import components directly instead of lazy loading to avoid module loading issues
@@ -33,7 +34,7 @@ const App: React.FC = () => {
       <main className={`${isAuthenticated ? 'pt-16' : ''}`}>
         <Routes>
           <Route path="/" element={
-            isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />
+            isAuthenticated ? <Navigate to="/dashboard" replace /> : <LandingPage />
           } />
           <Route path="/login" element={
             isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginForm />
