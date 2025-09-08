@@ -28,9 +28,12 @@ export const LoginForm: React.FC = () => {
   const handleGoogleSignIn = async () => {
     console.log('Google sign in attempt');
     const result = await loginWithGoogle();
+    console.log('Google sign in result:', result);
     if (result.success) {
       console.log('Google login successful');
       navigate('/dashboard');
+    } else {
+      console.error('Google login failed:', result);
     }
   };
   return (

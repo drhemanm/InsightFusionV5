@@ -5,6 +5,7 @@ import { Header } from './components/layout/Header';
 import { LoginForm } from './components/auth/LoginForm';
 import { RegisterForm } from './components/auth/RegisterForm';
 import { PrivateRoute } from './components/auth/PrivateRoute';
+import { supabase } from './config/supabase';
 
 // Lazy load components for code splitting
 const Dashboard = React.lazy(() => import('./components/dashboard/Dashboard').then(module => ({ default: module.Dashboard })));
@@ -24,11 +25,50 @@ const Documentation = React.lazy(() => import('./components/docs/Documentation')
 const App: React.FC = () => {
   const { isAuthenticated } = useAuthStore();
   
-  // Add error boundary for debugging
+  // Add comprehensive debugging
   React.useEffect(() => {
+    console.log('=== APP DEBUG INFO ===');
     console.log('App rendered, isAuthenticated:', isAuthenticated);
+    console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
+    console.log('Supabase Key exists:', !!import.meta.env.VITE_SUPABASE_ANON_KEY);
+    console.log('Current URL:', window.location.href);
+    
+    // Test Supabase connection
+    supabase.auth.getSession().then(({ data, error }) => {
+      console.log('Supabase session:', data.session?.user?.email || 'No session');
+      if (error) console.error('Supabase session error:', error);
+    });
   }, [isAuthenticated]);
 
+  // Add error boundary
+  const [hasError, setHasError] = React.useState(false);
+  
+  React.useEffect(() => {
+    const handleError = (error: ErrorEvent) => {
+      console.error('Global error caught:', error);
+      setHasError(true);
+    };
+    
+    window.addEventListener('error', handleError);
+    return () => window.removeEventListener('error', handleError);
+  }, []);
+
+  if (hasError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-red-50">
+        <div className="text-center p-8">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">Application Error</h1>
+          <p className="text-red-500 mb-4">Something went wrong. Check the browser console for details.</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-4 py-2 bg-red-600 text-white rounded-lg"
+          >
+            Reload Page
+          </button>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-gray-50">
       {isAuthenticated && <Header />}
@@ -36,7 +76,10 @@ const App: React.FC = () => {
       <main className={`${isAuthenticated ? 'pt-16' : ''}`}>
         <React.Suspense fallback={
           <div className="flex items-center justify-center h-screen">
+            <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              <p className="mt-4 text-gray-600">Loading InsightFusion CRM...</p>
+            </div>
           </div>
         }>
           <Routes>
