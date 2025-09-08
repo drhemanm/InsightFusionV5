@@ -1,5 +1,6 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useEffect } from 'react-router-dom';
+import { supabase } from './config/supabase';
 import { useAuthStore } from './store/authStore';
 import { Header } from './components/layout/Header';
 import { LoginForm } from './components/auth/LoginForm';
@@ -23,9 +24,38 @@ import { OrganizationDashboard } from './components/organization/OrganizationDas
 import { Documentation } from './components/docs/Documentation';
 
 const App: React.FC = () => {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, setUser, clearUser } = useAuthStore();
   
   console.log('App rendering, authenticated:', isAuthenticated);
+
+  // Listen for auth state changes (important for OAuth redirects)
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('🔐 Auth state change:', event);
+        
+        if (event === 'SIGNED_IN' && session?.user) {
+          console.log('✅ User signed in:', session.user.email);
+          const user = {
+            id: session.user.id,
+            email: session.user.email!,
+            firstName: session.user.user_metadata?.first_name || session.user.user_metadata?.firstName || 'User',
+            lastName: session.user.user_metadata?.last_name || session.user.user_metadata?.lastName || '',
+            role: 'user' as const,
+            organizationId: 'default',
+            isEmailVerified: session.user.email_confirmed_at !== null,
+            twoFactorEnabled: false
+          };
+          setUser(user);
+        } else if (event === 'SIGNED_OUT') {
+          console.log('🚪 User signed out');
+          clearUser();
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, [setUser, clearUser]);
 
   return (
     <div className="min-h-screen bg-gray-50">

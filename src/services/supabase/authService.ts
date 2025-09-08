@@ -7,13 +7,18 @@ export class SupabaseAuthService {
     try {
       console.log('🔐 Starting Google OAuth...');
       
+      // Get the current URL for proper redirect
+      const currentUrl = window.location.origin;
+      const redirectUrl = `${currentUrl}/dashboard`;
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo: redirectUrl,
           queryParams: {
             access_type: 'offline',
-            prompt: 'consent'
+            prompt: 'consent',
+            hd: undefined // Allow any domain
           }
         }
       });
@@ -21,10 +26,13 @@ export class SupabaseAuthService {
       if (error) {
         console.error('❌ Google OAuth error:', error);
         logger.error('Google sign in failed', { error });
-        return { success: false, error: error.message };
+        return { 
+          success: false, 
+          error: `Google sign-in failed: ${error.message}. Please try again or contact support.`
+        };
       }
 
-      console.log('✅ Google OAuth initiated successfully');
+      console.log('✅ Google OAuth initiated successfully, redirecting to:', redirectUrl);
       return { success: true };
     } catch (error: any) {
       console.error('❌ Google sign in exception:', error);

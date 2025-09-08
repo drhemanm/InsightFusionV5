@@ -20,9 +20,20 @@ export const LoginForm: React.FC = () => {
   };
 
   const handleGoogleSignIn = async () => {
-    const result = await loginWithGoogle();
-    if (result.success) {
-      navigate('/dashboard');
+    try {
+      console.log('🔐 Starting Google sign-in...');
+      const result = await loginWithGoogle();
+      
+      if (result.success) {
+        console.log('✅ Google sign-in initiated successfully');
+        // Note: User will be redirected by Supabase OAuth flow
+        // No need to manually navigate here
+      } else {
+        console.error('❌ Google sign-in failed:', result.error);
+        // Error is already set in the auth store
+      }
+    } catch (error) {
+      console.error('❌ Unexpected Google sign-in error:', error);
     }
   };
 

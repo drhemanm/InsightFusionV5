@@ -29,15 +29,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const result = await SupabaseAuthService.signInWithGoogle();
       
       if (result.success) {
-        if (result.user) {
-          set({ 
-            user: result.user,
-            isAuthenticated: true,
-            isLoading: false 
-          });
-        }
         console.log('✅ Google OAuth flow started successfully');
-        return { success: true };
+        // Don't set loading to false here - OAuth redirect will handle it
+        return { success: true, redirected: true };
       } else {
         console.error('❌ Google OAuth failed:', result.error);
         set({ 
@@ -50,7 +44,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       console.error('❌ Google sign in exception:', error);
       logger.error('Google sign in failed', { error });
       set({ 
-        error: 'Failed to sign in with Google',
+        error: 'Failed to sign in with Google. Please try again or use email login.',
         isLoading: false 
       });
       return { success: false };
