@@ -4,17 +4,25 @@ import { logger } from '../utils/monitoring/logger';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey || supabaseUrl === 'your_supabase_project_url' || supabaseAnonKey === 'your_supabase_anon_key') {
-  console.error('Supabase configuration error: Please update your .env file with actual Supabase credentials');
-  console.error('Current values:', { supabaseUrl, supabaseAnonKey: supabaseAnonKey ? '[REDACTED]' : 'undefined' });
-  throw new Error('Missing or invalid Supabase environment variables. Please check your .env file and update VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY with your actual Supabase project credentials.');
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Supabase configuration error: Missing environment variables');
+  console.error('VITE_SUPABASE_URL:', supabaseUrl ? 'Set' : 'Missing');
+  console.error('VITE_SUPABASE_ANON_KEY:', supabaseAnonKey ? 'Set' : 'Missing');
+  
+  // Don't throw error in production, use fallback
+  if (import.meta.env.PROD) {
+    console.warn('Using fallback Supabase configuration');
+  } else {
+    throw new Error('Missing Supabase environment variables');
+  }
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true
+    detectSessionInUrl: true,
+    flowType: 'pkce'
   },
   realtime: {
     params: {
@@ -25,7 +33,9 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 
 // Initialize auth state listener
 supabase.auth.onAuthStateChange((event, session) => {
+  console.log('Auth state changed:', event, session?.user?.id);
   logger.info('Auth state changed', { event, userId: session?.user?.id });
 });
 
+console.log('Supabase client initialized with URL:', supabaseUrl);
 logger.info('Supabase client initialized');

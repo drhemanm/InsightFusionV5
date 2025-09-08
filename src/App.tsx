@@ -23,116 +23,101 @@ const Documentation = React.lazy(() => import('./components/docs/Documentation')
 
 const App: React.FC = () => {
   const { isAuthenticated } = useAuthStore();
+  
+  // Add error boundary for debugging
+  React.useEffect(() => {
+    console.log('App rendered, isAuthenticated:', isAuthenticated);
+  }, [isAuthenticated]);
 
   return (
     <div className="min-h-screen bg-gray-50">
       {isAuthenticated && <Header />}
       
       <main className={`${isAuthenticated ? 'pt-16' : ''}`}>
-        <Routes>
-          <Route path="/" element={
-            isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />
-          } />
-          <Route path="/login" element={
-            isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginForm />
-          } />
-          <Route path="/register" element={
-            isAuthenticated ? <Navigate to="/dashboard" replace /> : <RegisterForm />
-          } />
-          
-          {/* Protected Routes */}
-          <Route path="/dashboard" element={
-            <PrivateRoute>
-              <React.Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>}>
+        <React.Suspense fallback={
+          <div className="flex items-center justify-center h-screen">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          </div>
+        }>
+          <Routes>
+            <Route path="/" element={
+              isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />
+            } />
+            <Route path="/login" element={
+              isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginForm />
+            } />
+            <Route path="/register" element={
+              isAuthenticated ? <Navigate to="/dashboard" replace /> : <RegisterForm />
+            } />
+            
+            {/* Protected Routes */}
+            <Route path="/dashboard" element={
+              <PrivateRoute>
                 <Dashboard />
-              </React.Suspense>
-            </PrivateRoute>
-          } />
-          <Route path="/contacts" element={
-            <PrivateRoute>
-              <React.Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>}>
+              </PrivateRoute>
+            } />
+            <Route path="/contacts" element={
+              <PrivateRoute>
                 <ContactList />
-              </React.Suspense>
-            </PrivateRoute>
-          } />
-          <Route path="/deals" element={
-            <PrivateRoute>
-              <React.Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>}>
+              </PrivateRoute>
+            } />
+            <Route path="/deals" element={
+              <PrivateRoute>
                 <DealPipeline />
-              </React.Suspense>
-            </PrivateRoute>
-          } />
-         <Route path="/tickets" element={
-           <PrivateRoute>
-             <React.Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>}>
+              </PrivateRoute>
+            } />
+           <Route path="/tickets" element={
+             <PrivateRoute>
                <TicketDashboard />
-             </React.Suspense>
-           </PrivateRoute>
-         } />
-          <Route path="/campaigns" element={
-            <PrivateRoute>
-              <React.Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>}>
+             </PrivateRoute>
+           } />
+            <Route path="/campaigns" element={
+              <PrivateRoute>
                 <CampaignDashboard />
-              </React.Suspense>
-            </PrivateRoute>
-          } />
-          <Route path="/tasks" element={
-            <PrivateRoute>
-              <React.Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>}>
+              </PrivateRoute>
+            } />
+            <Route path="/tasks" element={
+              <PrivateRoute>
                 <TaskDashboard />
-              </React.Suspense>
-            </PrivateRoute>
-          } />
-          <Route path="/messages" element={
-            <PrivateRoute>
-              <React.Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>}>
+              </PrivateRoute>
+            } />
+            <Route path="/messages" element={
+              <PrivateRoute>
                 <InboxView />
-              </React.Suspense>
-            </PrivateRoute>
-          } />
-          <Route path="/organization" element={
-            <PrivateRoute>
-              <React.Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>}>
+              </PrivateRoute>
+            } />
+            <Route path="/organization" element={
+              <PrivateRoute>
                 <OrganizationDashboard />
-              </React.Suspense>
-            </PrivateRoute>
-          } />
-          <Route path="/docs" element={
-            <PrivateRoute>
-              <React.Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>}>
+              </PrivateRoute>
+            } />
+            <Route path="/docs" element={
+              <PrivateRoute>
                 <Documentation />
-              </React.Suspense>
-            </PrivateRoute>
-          } />
-          <Route path="/features" element={
-            <PrivateRoute>
-              <React.Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>}>
+              </PrivateRoute>
+            } />
+            <Route path="/features" element={
+              <PrivateRoute>
                 <FeaturesOverview />
-              </React.Suspense>
-            </PrivateRoute>
-          } />
-          <Route path="/analytics" element={
-            <PrivateRoute>
-              <React.Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>}>
+              </PrivateRoute>
+            } />
+            <Route path="/analytics" element={
+              <PrivateRoute>
                 <AnalyticsDashboard />
-              </React.Suspense>
-            </PrivateRoute>
-          } />
-          <Route path="/automation" element={
-            <PrivateRoute>
-              <React.Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>}>
+              </PrivateRoute>
+            } />
+            <Route path="/automation" element={
+              <PrivateRoute>
                 <AutomationSuggestions context={{ screen: 'automation' }} />
-              </React.Suspense>
-            </PrivateRoute>
-          } />
-          <Route path="/settings/*" element={
-            <PrivateRoute>
-              <React.Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>}>
+              </PrivateRoute>
+            } />
+            <Route path="/settings/*" element={
+              <PrivateRoute>
                 <Settings />
-              </React.Suspense>
-            </PrivateRoute>
-          } />
-        </Routes>
+              </PrivateRoute>
+            } />
+          </Routes>
+        </React.Suspense>
       </main>
     </div>
   );

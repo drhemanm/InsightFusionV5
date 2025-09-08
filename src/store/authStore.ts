@@ -25,6 +25,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   loginWithGoogle: async () => {
     set({ isLoading: true, error: null });
     try {
+      console.log('Starting Google OAuth...');
       const result = await SupabaseAuthService.signInWithGoogle();
       
       if (result.success) {
@@ -35,8 +36,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             isLoading: false 
           });
         }
+        console.log('Google OAuth initiated successfully');
         return { success: true };
       } else {
+        console.error('Google OAuth failed:', result.error);
         set({ 
           error: result.error || 'Google sign in failed',
           isLoading: false 
@@ -44,6 +47,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         return { success: false };
       }
     } catch (error: any) {
+      console.error('Google sign in error:', error);
       logger.error('Google sign in failed', { error });
       set({ 
         error: 'Failed to sign in with Google',
@@ -56,9 +60,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   loginWithEmail: async (email: string, password: string) => {
     set({ isLoading: true, error: null });
     try {
+      console.log('Starting email login for:', email);
       const result = await SupabaseAuthService.signInWithEmail(email, password);
       
       if (result.success && result.user) {
+        console.log('Email login successful:', result.user.email);
         set({ 
           user: result.user,
           isAuthenticated: true,
@@ -66,6 +72,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         });
         return true;
       } else {
+        console.error('Email login failed:', result.error);
         set({ 
           error: result.error || 'Login failed',
           isLoading: false 
@@ -73,6 +80,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         return false;
       }
     } catch (error: any) {
+      console.error('Email login error:', error);
       logger.error('Email login failed', { error });
       set({ 
         error: 'Login failed',

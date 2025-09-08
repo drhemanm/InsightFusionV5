@@ -2,7 +2,6 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { TenantProvider } from './context/TenantContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { supabase } from './config/supabase';
 import { useAuthStore } from './store/authStore';
@@ -23,25 +22,42 @@ const queryClient = new QueryClient({
 
 // Initialize auth state from Supabase
 const initializeAuth = async () => {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session?.user) {
-    const user = {
-      id: session.user.id,
-      email: session.user.email!,
-      firstName: session.user.user_metadata?.firstName || 'User',
-      lastName: session.user.user_metadata?.lastName || '',
-      role: session.user.user_metadata?.role || 'user',
-      organizationId: 'default',
-      isEmailVerified: session.user.email_confirmed_at !== null,
-      twoFactorEnabled: false
-    };
-    useAuthStore.getState().setUser(user);
+  try {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    
+    if (error) {
+      console.error('Auth session error:', error);
+      return;
+    }
+    
+    if (session?.user) {
+      const user = {
+        id: session.user.id,
+        email: session.user.email!,
+        firstName: session.user.user_metadata?.firstName || session.user.user_metadata?.first_name || 'User',
+        lastName: session.user.user_metadata?.lastName || session.user.user_metadata?.last_name || '',
+        role: session.user.user_metadata?.role || 'user',
+        organizationId: 'default',
+        isEmailVerified: session.user.email_confirmed_at !== null,
+        twoFactorEnabled: false
+      };
+      useAuthStore.getState().setUser(user);
+      console.log('User initialized:', user.email);
+    }
+  } catch (error) {
+    console.error('Failed to initialize auth:', error);
   }
 };
 
 // Initialize app
 const init = async () => {
-  await initializeAuth();
+  try {
+    console.log('Initializing app...');
+    await initializeAuth();
+    console.log('Auth initialized');
+  } catch (error) {
+    console.error('App initialization failed:', error);
+  }
   
   const root = document.getElementById('root');
   if (root) {
@@ -49,15 +65,15 @@ const init = async () => {
       <StrictMode>
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
-            <TenantProvider>
-              <ThemeProvider>
-                <App />
-              </ThemeProvider>
-            </TenantProvider>
+            <ThemeProvider>
+              <App />
+            </ThemeProvider>
           </BrowserRouter>
         </QueryClientProvider>
       </StrictMode>
     );
+  } else {
+    console.error('Root element not found');
   }
 };
 

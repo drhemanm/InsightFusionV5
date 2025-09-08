@@ -9,18 +9,27 @@ export const LoginForm: React.FC = () => {
   const { loginWithEmail, loginWithGoogle, isLoading, error } = useAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  
+  // Add debugging
+  React.useEffect(() => {
+    console.log('LoginForm mounted');
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Login attempt:', email);
     const success = await loginWithEmail(email, password);
     if (success) {
+      console.log('Login successful, navigating to dashboard');
       navigate('/dashboard');
     }
   };
 
   const handleGoogleSignIn = async () => {
+    console.log('Google sign in attempt');
     const result = await loginWithGoogle();
     if (result.success) {
+      console.log('Google login successful');
       navigate('/dashboard');
     }
   };
