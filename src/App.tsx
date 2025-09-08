@@ -24,41 +24,59 @@ const Documentation = React.lazy(() => import('./components/docs/Documentation')
 
 const App: React.FC = () => {
   const { isAuthenticated } = useAuthStore();
-  
-  // Add comprehensive debugging
-  React.useEffect(() => {
-    console.log('=== APP DEBUG INFO ===');
-    console.log('App rendered, isAuthenticated:', isAuthenticated);
-    console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
-    console.log('Supabase Key exists:', !!import.meta.env.VITE_SUPABASE_ANON_KEY);
-    console.log('Current URL:', window.location.href);
-    
-    // Test Supabase connection
-    supabase.auth.getSession().then(({ data, error }) => {
-      console.log('Supabase session:', data.session?.user?.email || 'No session');
-      if (error) console.error('Supabase session error:', error);
-    });
-  }, [isAuthenticated]);
-
-  // Add error boundary
-  const [hasError, setHasError] = React.useState(false);
+  const [isInitialized, setIsInitialized] = React.useState(false);
+  const [initError, setInitError] = React.useState<string | null>(null);
   
   React.useEffect(() => {
-    const handleError = (error: ErrorEvent) => {
-      console.error('Global error caught:', error);
-      setHasError(true);
+    const initializeApp = async () => {
+      try {
+        console.log('=== INITIALIZING APP ===');
+        console.log('Environment:', import.meta.env.MODE);
+        console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
+        console.log('Supabase Key exists:', !!import.meta.env.VITE_SUPABASE_ANON_KEY);
+        
+        // Test Supabase connection
+        const { data, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error('Supabase connection error:', error);
+          setInitError(`Supabase Error: ${error.message}`);
+        } else {
+          console.log('Supabase connected successfully');
+          console.log('Session:', data.session?.user?.email || 'No active session');
+        }
+        
+        setIsInitialized(true);
+      } catch (error) {
+        console.error('App initialization failed:', error);
+        setInitError(`Initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        setIsInitialized(true);
+      }
     };
-    
-    window.addEventListener('error', handleError);
-    return () => window.removeEventListener('error', handleError);
+
+    initializeApp();
   }, []);
 
-  if (hasError) {
+  // Show loading screen while initializing
+  if (!isInitialized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-blue-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Loading InsightFusion CRM</h2>
+          <p className="text-gray-600">Initializing application...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error screen if initialization failed
+  if (initError) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-red-50">
         <div className="text-center p-8">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Application Error</h1>
-          <p className="text-red-500 mb-4">Something went wrong. Check the browser console for details.</p>
+          <h1 className="text-2xl font-bold text-red-600 mb-4">Configuration Error</h1>
+          <p className="text-red-500 mb-4">{initError}</p>
+          <p className="text-sm text-gray-600 mb-4">Check the browser console for more details.</p>
           <button 
             onClick={() => window.location.reload()} 
             className="px-4 py-2 bg-red-600 text-white rounded-lg"
@@ -69,6 +87,7 @@ const App: React.FC = () => {
       </div>
     );
   }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {isAuthenticated && <Header />}
@@ -77,7 +96,7 @@ const App: React.FC = () => {
         <React.Suspense fallback={
           <div className="flex items-center justify-center h-screen">
             <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
               <p className="mt-4 text-gray-600">Loading InsightFusion CRM...</p>
             </div>
           </div>
