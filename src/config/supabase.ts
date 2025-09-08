@@ -1,13 +1,21 @@
 import { createClient } from '@supabase/supabase-js';
 import { logger } from '../utils/monitoring/logger';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://clgfmgyhrdomimirhkpxx.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNsZ2ZtZ3locmRvbWltcmhrcHh4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcyNjcyMzIsImV4cCI6MjA3Mjg0MzIzMn0.w2p0qaB11s9yPVWr7keyYDRvyAvT9OUESWkpSB6foEQ';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Validate Supabase configuration
 console.log('Supabase Configuration Check:');
 console.log('URL:', supabaseUrl);
 console.log('Anon Key:', supabaseAnonKey ? 'Present' : 'Missing');
+
+// Check if environment variables are properly loaded
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('❌ Missing Supabase environment variables!');
+  console.error('VITE_SUPABASE_URL:', supabaseUrl ? 'Set' : 'Missing');
+  console.error('VITE_SUPABASE_ANON_KEY:', supabaseAnonKey ? 'Set' : 'Missing');
+  throw new Error('Missing required Supabase environment variables. Please check your .env file and Netlify environment variables.');
+}
 
 // Test URL format
 try {
