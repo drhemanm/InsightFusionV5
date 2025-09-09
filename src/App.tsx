@@ -19,7 +19,7 @@ import { TicketDashboard } from './components/tickets/TicketDashboard';
 import { CampaignDashboard } from './components/campaigns/CampaignDashboard';
 import { FeaturesOverview } from './components/features/FeaturesOverview';
 import { AnalyticsDashboard } from './components/analytics/AnalyticsDashboard';
-import { AutomationSuggestions } from './components/workflow/AutomationSuggestions';
+import { AutomationDashboard } from './components/automation/AutomationDashboard';
 import { OrganizationDashboard } from './components/organization/OrganizationDashboard';
 import { Documentation } from './components/docs/Documentation';
 import { DatabaseAuditPanel } from './components/admin/DatabaseAuditPanel';
@@ -241,7 +241,7 @@ const App: React.FC = () => {
           } />
           <Route path="/automation" element={
             <PrivateRoute>
-              <AutomationSuggestions context={{ screen: 'automation' }} />
+              <AutomationDashboard />
             </PrivateRoute>
           } />
           <Route path="/settings/*" element={
