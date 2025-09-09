@@ -25,6 +25,8 @@ const routerFutureFlags = {
 console.log('=== STARTING APP ===');
 console.log('Environment:', import.meta.env.MODE);
 console.log('Base URL:', import.meta.env.BASE_URL);
+console.log('Current URL:', window.location.href);
+console.log('Pathname:', window.location.pathname);
 
 const root = document.getElementById('root');
 if (!root) {
@@ -35,7 +37,7 @@ if (!root) {
   createRoot(root).render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
-        <BrowserRouter future={routerFutureFlags}>
+        <BrowserRouter basename="/" future={routerFutureFlags}>
           <ThemeProvider>
             <App />
           </ThemeProvider>

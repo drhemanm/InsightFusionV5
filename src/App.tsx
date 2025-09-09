@@ -254,6 +254,11 @@ const App: React.FC = () => {
               <DatabaseAuditPanel />
             </PrivateRoute>
           } />
+          
+          {/* Catch-all route for 404s */}
+          <Route path="*" element={
+            isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/" replace />
+          } />
         </Routes>
       </main>
       
