@@ -129,11 +129,25 @@ export class SupabaseAuthService {
   }
 
   private static transformSupabaseUser(supabaseUser: any): User {
+    console.log('🔄 Transforming Supabase user:', {
+      id: supabaseUser.id,
+      email: supabaseUser.email,
+      metadata: supabaseUser.user_metadata,
+      appMetadata: supabaseUser.app_metadata
+    });
+
     return {
       id: supabaseUser.id,
       email: supabaseUser.email,
-      firstName: supabaseUser.user_metadata?.firstName || supabaseUser.user_metadata?.first_name || 'User',
-      lastName: supabaseUser.user_metadata?.lastName || supabaseUser.user_metadata?.last_name || '',
+      firstName: supabaseUser.user_metadata?.firstName || 
+                supabaseUser.user_metadata?.first_name || 
+                supabaseUser.user_metadata?.given_name ||
+                supabaseUser.user_metadata?.name?.split(' ')[0] ||
+                supabaseUser.email?.split('@')[0] || 'User',
+      lastName: supabaseUser.user_metadata?.lastName || 
+               supabaseUser.user_metadata?.last_name || 
+               supabaseUser.user_metadata?.family_name ||
+               supabaseUser.user_metadata?.name?.split(' ').slice(1).join(' ') || '',
       role: supabaseUser.user_metadata?.role || 'user',
       organizationId: supabaseUser.user_metadata?.organizationId || 'default',
       isEmailVerified: supabaseUser.email_confirmed_at !== null,

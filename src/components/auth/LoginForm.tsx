@@ -26,11 +26,9 @@ export const LoginForm: React.FC = () => {
       
       if (result.success) {
         console.log('✅ Google sign-in initiated successfully');
-        // Note: User will be redirected by Supabase OAuth flow
-        // No need to manually navigate here
+        // OAuth redirect will handle navigation
       } else {
         console.error('❌ Google sign-in failed:', result.error);
-        // Error is already set in the auth store
       }
     } catch (error) {
       console.error('❌ Unexpected Google sign-in error:', error);

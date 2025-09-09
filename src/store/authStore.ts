@@ -14,12 +14,13 @@ interface AuthState {
   logout: () => Promise<void>;
   setUser: (user: User) => void;
   clearUser: () => void;
+  setLoading: (loading: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isAuthenticated: false,
-  isLoading: false,
+  isLoading: true, // Start with loading true
   error: null,
 
   loginWithGoogle: async () => {
@@ -96,6 +97,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       
       if (result.success) {
         console.log('✅ Registration successful');
+        // For email registration, user needs to verify email
+        // Don't set authenticated state yet
         set({ isLoading: false });
         return true;
       } else {
@@ -118,6 +121,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   logout: async () => {
+    set({ isLoading: true });
     try {
       console.log('🚪 Logging out user...');
       await SupabaseAuthService.signOut();
@@ -131,9 +135,27 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (error) {
       console.error('❌ Logout failed:', error);
       logger.error('Logout failed', { error });
+      set({ isLoading: false });
     }
   },
 
-  setUser: (user) => set({ user, isAuthenticated: true }),
-  clearUser: () => set({ user: null, isAuthenticated: false })
+  setUser: (user) => {
+    console.log('🔄 Setting user in auth store:', user);
+    set({ 
+      user, 
+      isAuthenticated: true, 
+      isLoading: false,
+      error: null 
+    });
+  },
+  clearUser: () => {
+    console.log('🧹 Clearing user from auth store');
+    set({ 
+      user: null, 
+      isAuthenticated: false, 
+      isLoading: false,
+      error: null 
+    });
+  },
+  setLoading: (loading) => set({ isLoading: loading })
 }));
