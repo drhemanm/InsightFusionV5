@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { supabase } from '../config/supabase';
 import { SupabaseAuthService } from '../services/supabase/authService';
 import { logger } from '../utils/monitoring/logger';
 import type { User } from '../types/auth';
