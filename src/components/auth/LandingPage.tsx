@@ -79,11 +79,6 @@ export const LandingPage: React.FC = () => {
       {/* Hero Section */}
       <div className="relative z-10 max-w-7xl mx-auto px-6 pt-20 pb-32">
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 bg-blue-500/10 text-blue-300 px-4 py-2 rounded-full text-sm font-medium mb-8 backdrop-blur-sm border border-blue-500/20">
-            <Sparkles className="h-4 w-4" />
-            <span>Trusted by 10,000+ businesses worldwide</span>
-          </div>
-          
           <h1 className="text-5xl md:text-7xl font-bold text-white mb-8 leading-tight">
             <span className="bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent">
               Sales Intelligence
