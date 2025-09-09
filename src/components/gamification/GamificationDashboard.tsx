@@ -48,8 +48,39 @@ export const GamificationDashboard: React.FC = () => {
               <Challenges />
             </div>
           </div>
-
         </TabsContent>
+
+        <TabsContent value="achievements">
+          <div className="space-y-8">
+            <RewardsMarketplace />
+            <RedemptionHistory userId="current-user" />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="challenges">
+          <Challenges />
+        </TabsContent>
+
+        <TabsContent value="settings">
+          {isAdmin ? (
+            <GamificationAdminPanel />
+          ) : (
+            <div className="space-y-6">
+              <ThemeSelector />
+              <div className="bg-blue-50 rounded-lg p-6">
+                <h3 className="font-medium text-blue-900 mb-2">Need More Control?</h3>
+                <p className="text-blue-800 text-sm">
+                  Contact your administrator to customize achievements, badges, and rewards.
+                </p>
+              </div>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};
+
 const GamificationUserSettings: React.FC = () => {
   const [settings, setSettings] = React.useState({
     notifications: true,
@@ -59,19 +90,19 @@ const GamificationUserSettings: React.FC = () => {
     achievementAlerts: true,
     challengeReminders: true
   });
-          <div className="space-y-8">
+
   const handleSave = () => {
     localStorage.setItem('gamificationUserSettings', JSON.stringify(settings));
     alert('Gamification settings saved successfully!');
   };
-            <RewardsMarketplace />
+
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">
       <div className="flex items-center gap-3 mb-6">
         <Settings className="text-blue-500" size={24} />
         <h2 className="text-xl font-semibold">Gamification Preferences</h2>
       </div>
-            <RedemptionHistory userId="current-user" />
+
       <div className="space-y-6">
         <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
           <div>
@@ -88,7 +119,7 @@ const GamificationUserSettings: React.FC = () => {
             <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
           </label>
         </div>
-          </div>
+
         <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
           <div>
             <h3 className="font-medium">Show in Leaderboard</h3>
@@ -104,7 +135,7 @@ const GamificationUserSettings: React.FC = () => {
             <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
           </label>
         </div>
-        </TabsContent>
+
         <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
           <div>
             <h3 className="font-medium">Challenge Reminders</h3>
@@ -136,7 +167,7 @@ const GamificationUserSettings: React.FC = () => {
             <option value="never">Never</option>
           </select>
         </div>
-        <TabsContent value="challenges">
+
         <div className="flex justify-end">
           <button
             onClick={handleSave}
@@ -149,11 +180,11 @@ const GamificationUserSettings: React.FC = () => {
     </div>
   );
 };
-          <Challenges />
+
 // Admin Panel Component
 const GamificationAdminPanel: React.FC = () => {
   const [activeTab, setActiveTab] = React.useState('overview');
-        </TabsContent>
+
   const adminTabs = [
     { id: 'overview', label: 'Overview', icon: BarChart3 },
     { id: 'achievements', label: 'Achievements', icon: Trophy },
@@ -162,7 +193,7 @@ const GamificationAdminPanel: React.FC = () => {
     { id: 'rewards', label: 'Rewards', icon: Gift },
     { id: 'themes', label: 'Themes', icon: Palette }
   ];
-        <TabsContent value="settings">
+
   return (
     <div className="space-y-6">
       <div className="bg-gradient-to-r from-yellow-100 to-amber-100 rounded-lg p-6">
@@ -174,7 +205,7 @@ const GamificationAdminPanel: React.FC = () => {
           Configure achievements, badges, challenges, rewards, and themes for your organization.
         </p>
       </div>
-          {isAdmin ? (
+
       <div className="flex gap-1 bg-gray-100 p-1 rounded-lg w-fit">
         {adminTabs.map(tab => (
           <button
@@ -191,7 +222,7 @@ const GamificationAdminPanel: React.FC = () => {
           </button>
         ))}
       </div>
-            <GamificationAdminPanel />
+
       <div className="bg-white rounded-lg shadow-lg p-6">
         {activeTab === 'overview' && <AdminOverview />}
         {activeTab === 'achievements' && <AdminAchievements />}
@@ -203,7 +234,7 @@ const GamificationAdminPanel: React.FC = () => {
     </div>
   );
 };
-          ) : (
+
 // Admin Overview Component
 const AdminOverview: React.FC = () => {
   const stats = {
@@ -214,7 +245,7 @@ const AdminOverview: React.FC = () => {
     challengesActive: 5,
     rewardsAvailable: 23
   };
-            <div className="space-y-6">
+
   return (
     <div className="space-y-6">
       <h3 className="text-xl font-bold">Gamification Overview</h3>
@@ -232,7 +263,7 @@ const AdminOverview: React.FC = () => {
             {stats.activeParticipants} of {stats.totalUsers} users
           </div>
         </div>
-              <ThemeSelector />
+
         <div className="p-6 bg-green-50 rounded-lg">
           <div className="flex items-center justify-between mb-4">
             <h4 className="font-medium">Points Awarded</h4>
@@ -243,7 +274,7 @@ const AdminOverview: React.FC = () => {
           </div>
           <div className="text-sm text-gray-600">This month</div>
         </div>
-              <div className="bg-blue-50 rounded-lg p-6">
+
         <div className="p-6 bg-purple-50 rounded-lg">
           <div className="flex items-center justify-between mb-4">
             <h4 className="font-medium">Active Challenges</h4>
@@ -255,7 +286,7 @@ const AdminOverview: React.FC = () => {
           <div className="text-sm text-gray-600">Running now</div>
         </div>
       </div>
-                <h3 className="font-medium text-blue-900 mb-2">Need More Control?</h3>
+
       <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6">
         <h4 className="font-semibold text-gray-900 mb-4">🎮 Quick Actions</h4>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -279,7 +310,7 @@ const AdminOverview: React.FC = () => {
     </div>
   );
 };
-                <p className="text-blue-800 text-sm">
+
 // Admin Achievements Component
 const AdminAchievements: React.FC = () => {
   return (
@@ -298,7 +329,7 @@ const AdminAchievements: React.FC = () => {
     </div>
   );
 };
-                  Contact your administrator to customize achievements, badges, and rewards.
+
 // Admin Badges Component
 const AdminBadges: React.FC = () => {
   return (
@@ -317,7 +348,7 @@ const AdminBadges: React.FC = () => {
     </div>
   );
 };
-                </p>
+
 // Admin Challenges Component
 const AdminChallenges: React.FC = () => {
   return (
@@ -336,7 +367,7 @@ const AdminChallenges: React.FC = () => {
     </div>
   );
 };
-              </div>
+
 // Admin Rewards Component
 const AdminRewards: React.FC = () => {
   return (
@@ -355,11 +386,11 @@ const AdminRewards: React.FC = () => {
     </div>
   );
 };
-            </div>
+
 // Admin Themes Component
 const AdminThemes: React.FC = () => {
   return (
-          )}
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h3 className="text-xl font-bold">Theme Customization</h3>
         <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
