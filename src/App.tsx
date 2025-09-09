@@ -22,6 +22,8 @@ import { AnalyticsDashboard } from './components/analytics/AnalyticsDashboard';
 import { AutomationSuggestions } from './components/workflow/AutomationSuggestions';
 import { OrganizationDashboard } from './components/organization/OrganizationDashboard';
 import { Documentation } from './components/docs/Documentation';
+import { DatabaseAuditPanel } from './components/admin/DatabaseAuditPanel';
+import { DatabaseStatus } from './components/admin/DatabaseStatus';
 
 const App: React.FC = () => {
   const { isAuthenticated, setUser, clearUser, isLoading, setLoading } = useAuthStore();
@@ -247,8 +249,16 @@ const App: React.FC = () => {
               <Settings />
             </PrivateRoute>
           } />
+          <Route path="/admin/database" element={
+            <PrivateRoute>
+              <DatabaseAuditPanel />
+            </PrivateRoute>
+          } />
         </Routes>
       </main>
+      
+      {/* Database Status Indicator */}
+      {isAuthenticated && <DatabaseStatus />}
     </div>
   );
 };
