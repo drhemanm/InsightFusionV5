@@ -22,6 +22,7 @@ import { AnalyticsDashboard } from './components/analytics/AnalyticsDashboard';
 import { AutomationDashboard } from './components/automation/AutomationDashboard';
 import { OrganizationDashboard } from './components/organization/OrganizationDashboard';
 import { Documentation } from './components/docs/Documentation';
+import { GamificationAdminPanel } from './components/gamification/admin/GamificationAdminPanel';
 import { DatabaseAuditPanel } from './components/admin/DatabaseAuditPanel';
 import { DatabaseStatus } from './components/admin/DatabaseStatus';
 
@@ -242,6 +243,11 @@ const App: React.FC = () => {
           <Route path="/automation" element={
             <PrivateRoute>
               <AutomationDashboard />
+            </PrivateRoute>
+          } />
+          <Route path="/gamification/admin" element={
+            <PrivateRoute>
+              <GamificationAdminPanel />
             </PrivateRoute>
           } />
           <Route path="/settings/*" element={
