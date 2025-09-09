@@ -3,12 +3,16 @@ import { logger } from '../../utils/monitoring/logger';
 import type { User } from '../../types/auth';
 
 export class SupabaseAuthService {
+import { supabase } from '../../config/supabase';
+import { logger } from '../../utils/monitoring/logger';
+import type { User, LoginCredentials, AuthResponse } from '../../types/auth';
+
+export class SupabaseAuthService {
   static async signInWithGoogle(): Promise<{ success: boolean; user?: User; error?: string }> {
     try {
       console.log('🔐 Starting Google OAuth...');
       
-      // Use the production URL for redirect
-      const redirectUrl = 'https://glittering-moxie-90edde.netlify.app/dashboard';
+      const redirectUrl = `${window.location.origin}/dashboard`;
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -17,7 +21,7 @@ export class SupabaseAuthService {
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
-            hd: undefined // Allow any domain
+            hd: undefined
           }
         }
       });
@@ -27,11 +31,11 @@ export class SupabaseAuthService {
         logger.error('Google sign in failed', { error });
         return { 
           success: false, 
-          error: `Google sign-in failed: ${error.message}. Please try again or contact support.`
+          error: error.message
         };
       }
 
-      console.log('✅ Google OAuth initiated successfully, redirecting to:', redirectUrl);
+      console.log('✅ Google OAuth initiated successfully');
       return { success: true };
     } catch (error: any) {
       console.error('❌ Google sign in exception:', error);
@@ -79,7 +83,7 @@ export class SupabaseAuthService {
         password,
         options: {
           data: metadata,
-          emailRedirectTo: 'https://glittering-moxie-90edde.netlify.app/dashboard'
+          emailRedirectTo: `${window.location.origin}/dashboard`
         }
       });
 
@@ -91,12 +95,10 @@ export class SupabaseAuthService {
 
       if (data.user) {
         console.log('✅ Registration successful for:', data.user.email);
-        console.log('📧 Email confirmation required:', !data.user.email_confirmed_at);
         const user = this.transformSupabaseUser(data.user);
         return { success: true, user };
       }
 
-      console.error('❌ No user data received during registration');
       return { success: false, error: 'No user data received' };
     } catch (error: any) {
       console.error('❌ Registration exception:', error);
@@ -130,13 +132,6 @@ export class SupabaseAuthService {
   }
 
   private static transformSupabaseUser(supabaseUser: any): User {
-    console.log('🔄 Transforming Supabase user:', {
-      id: supabaseUser.id,
-      email: supabaseUser.email,
-      metadata: supabaseUser.user_metadata,
-      appMetadata: supabaseUser.app_metadata
-    });
-
     return {
       id: supabaseUser.id,
       email: supabaseUser.email,
@@ -155,4 +150,7 @@ export class SupabaseAuthService {
       twoFactorEnabled: false
     };
   }
+}
+
+export const authService = SupabaseAuthService;
 }

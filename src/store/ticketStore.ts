@@ -100,7 +100,7 @@ export const useTicketStore = create<TicketStore>((set) => ({
       if (error) throw error;
 
       set({ 
-        tickets: tickets.map(SupabaseTicketService.transformTicket), 
+        tickets: tickets.map((ticket: any) => SupabaseTicketService.transformTicket(ticket)), 
         isLoading: false 
       });
     } catch (error) {

@@ -6,13 +6,16 @@ import { CampaignMetrics } from './CampaignMetrics';
 import { CreateCampaignModal } from './CreateCampaignModal';
 
 export const CampaignDashboard: React.FC = () => {
-  const { campaigns, fetchCampaigns } = useCampaignStore();
+  const { campaigns, fetchCampaigns, isLoading, error } = useCampaignStore();
   const [showCreateModal, setShowCreateModal] = React.useState(false);
   const [filterStatus, setFilterStatus] = React.useState<string>('all');
 
   useEffect(() => {
     fetchCampaigns();
   }, [fetchCampaigns]);
+
+  if (isLoading) return <div className="flex justify-center p-8">Loading campaigns...</div>;
+  if (error) return <div className="text-red-500 p-4">{error}</div>;
 
   const activeCampaigns = campaigns.filter(c => c.status === 'active');
   const totalBudget = campaigns.reduce((sum, c) => sum + c.budget, 0);

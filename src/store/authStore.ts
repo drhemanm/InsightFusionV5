@@ -123,21 +123,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       console.log('📝 Starting user registration for:', email);
       
-      // Test Supabase connection first
-      try {
-        const { error: connectionError } = await supabase.from('users').select('count', { count: 'exact', head: true });
-        if (connectionError) {
-          throw new Error(`Supabase connection failed: ${connectionError.message}`);
-        }
-      } catch (connectionError: any) {
-        console.error('❌ Supabase connection test failed:', connectionError);
-        set({ 
-          error: 'Unable to connect to authentication service. Please check your internet connection or try again later.',
-          isLoading: false 
-        });
-        return false;
-      }
-      
       const result = await SupabaseAuthService.signUp(email, password, {
         firstName,
         lastName,

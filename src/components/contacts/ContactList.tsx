@@ -2,11 +2,16 @@ import React, { useState } from 'react';
 import { useContactStore } from '../../store/contactStore';
 import { Search, UserPlus, Filter } from 'lucide-react';
 import { AddContactModal } from './AddContactModal';
+import { useEffect } from 'react';
 
 export const ContactList: React.FC = () => {
-  const { contacts, isLoading, error } = useContactStore();
+  const { contacts, isLoading, error, fetchContacts } = useContactStore();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    fetchContacts();
+  }, [fetchContacts]);
 
   if (isLoading) return <div className="flex justify-center p-8">Loading contacts...</div>;
   if (error) return <div className="text-red-500 p-4">{error}</div>;

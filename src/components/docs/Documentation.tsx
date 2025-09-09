@@ -1,10 +1,25 @@
 import React, { useState } from 'react';
 import { FileText, Book, Code, Terminal, Settings, HelpCircle, History, Phone, Search, ChevronRight } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import { useEffect } from 'react';
 
 export const Documentation: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeSection, setActiveSection] = useState('getting-started');
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate loading documentation
+    setTimeout(() => setIsLoading(false), 500);
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   const sections = {
     'getting-started': `

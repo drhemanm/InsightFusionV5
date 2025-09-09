@@ -5,11 +5,19 @@ import { CreateTicketForm } from './CreateTicketForm';
 import { TicketAnalytics } from './TicketAnalytics';
 import { TicketDetails } from './TicketDetails';
 import { useTicketStore } from '../../store/ticketStore';
+import { useEffect } from 'react';
 
 export const TicketDashboard: React.FC = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<string | null>(null);
-  const { tickets } = useTicketStore();
+  const { tickets, fetchTickets, isLoading, error } = useTicketStore();
+
+  useEffect(() => {
+    fetchTickets();
+  }, [fetchTickets]);
+
+  if (isLoading) return <div className="flex justify-center p-8">Loading tickets...</div>;
+  if (error) return <div className="text-red-500 p-4">{error}</div>;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">

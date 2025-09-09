@@ -85,7 +85,7 @@ export class SupabaseTicketService {
     }
   }
 
-  private static transformTicket(supabaseTicket: any): Ticket {
+  static transformTicket(supabaseTicket: any): Ticket {
     return {
       id: supabaseTicket.id,
       ticketId: `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,

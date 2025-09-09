@@ -110,7 +110,7 @@ export class SupabaseDealService {
     }
   }
 
-  private static transformDeal(supabaseDeal: any): Deal {
+  static transformDeal(supabaseDeal: any): Deal {
     return {
       id: supabaseDeal.id,
       title: supabaseDeal.title,

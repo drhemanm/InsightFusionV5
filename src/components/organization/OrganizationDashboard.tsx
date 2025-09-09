@@ -3,9 +3,16 @@ import { Building2, Users, Shield, Clock } from 'lucide-react';
 import { OrganizationDetails } from './OrganizationDetails';
 import { UserManagementTable } from './UserManagementTable';
 import { AuditTrail } from './AuditTrail';
+import { useOrganizationStore } from '../../store/organizationStore';
+import { useEffect } from 'react';
 
 export const OrganizationDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState('details');
+  const { fetchTeamMembers } = useOrganizationStore();
+
+  useEffect(() => {
+    fetchTeamMembers();
+  }, [fetchTeamMembers]);
 
   const tabs = [
     { id: 'details', label: 'Organization Details', icon: Building2 },

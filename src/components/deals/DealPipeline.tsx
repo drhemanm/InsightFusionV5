@@ -4,12 +4,15 @@ import { useDealStore } from '../../store/dealStore';
 import { CreateDealForm } from './CreateDealForm';
 
 export const DealPipeline: React.FC = () => {
-  const { deals = [], fetchDeals } = useDealStore();
+  const { deals, fetchDeals, isLoading, error } = useDealStore();
   const [showCreateForm, setShowCreateForm] = useState(false);
 
   useEffect(() => {
     fetchDeals();
   }, [fetchDeals]);
+
+  if (isLoading) return <div className="flex justify-center p-8">Loading deals...</div>;
+  if (error) return <div className="text-red-500 p-4">{error}</div>;
 
   const stages = [
     { id: 'lead', label: 'Lead' },
@@ -35,7 +38,7 @@ export const DealPipeline: React.FC = () => {
 
       <div className="grid grid-cols-6 gap-4">
         {stages.map((stage) => {
-          const stageDeals = deals.filter(deal => deal.stage === stage.id) || [];
+          const stageDeals = (deals || []).filter(deal => deal.stage === stage.id);
           const totalValue = stageDeals.reduce((sum, deal) => sum + deal.value, 0);
           
           return (

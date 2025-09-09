@@ -4,15 +4,28 @@ import { MetricsOverview } from './metrics/MetricsOverview';
 import { PerformanceChart } from './charts/PerformanceChart';
 import { ActivityStream } from '../analytics/ActivityStream';
 import { GamificationDashboard } from '../gamification/GamificationDashboard';
+import { useContactStore } from '../../store/contactStore';
+import { useDealStore } from '../../store/dealStore';
+import { useTicketStore } from '../../store/ticketStore';
+import { useEffect } from 'react';
 import type { TimeRange } from './filters/TimeRangeFilter';
 
 export const Dashboard: React.FC = () => {
   const [timeRange, setTimeRange] = useState<TimeRange['value']>('30d');
   const [showGamification, setShowGamification] = useState(false);
+  const { fetchContacts } = useContactStore();
+  const { fetchDeals } = useDealStore();
+  const { fetchTickets } = useTicketStore();
+
+  useEffect(() => {
+    // Initialize data on dashboard load
+    fetchContacts();
+    fetchDeals();
+    fetchTickets();
+  }, [fetchContacts, fetchDeals, fetchTickets]);
 
   const handleTimeRangeChange = (value: TimeRange['value']) => {
     setTimeRange(value);
-    // In production, fetch new data based on time range
   };
 
   return (

@@ -91,7 +91,7 @@ export const useDealStore = create<DealStore>((set) => ({
       if (error) throw error;
 
       set({ 
-        deals: deals.map(SupabaseDealService.transformDeal), 
+        deals: deals.map((deal: any) => SupabaseDealService.transformDeal(deal)), 
         isLoading: false 
       });
     } catch (error) {
@@ -112,7 +112,7 @@ export const useDealStore = create<DealStore>((set) => ({
       if (error) throw error;
 
       set({ 
-        deals: deals.map(SupabaseDealService.transformDeal), 
+        deals: deals.map((deal: any) => SupabaseDealService.transformDeal(deal)), 
         isLoading: false 
       });
     } catch (error) {

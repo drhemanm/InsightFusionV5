@@ -25,6 +25,7 @@ import { Documentation } from './components/docs/Documentation';
 import { GamificationAdminPanel } from './components/gamification/admin/GamificationAdminPanel';
 import { DatabaseAuditPanel } from './components/admin/DatabaseAuditPanel';
 import { DatabaseStatus } from './components/admin/DatabaseStatus';
+import { Reports } from './components/reports/Reports';
 
 const App: React.FC = () => {
   const { isAuthenticated, setUser, clearUser, isLoading, setLoading } = useAuthStore();
@@ -248,6 +249,11 @@ const App: React.FC = () => {
           <Route path="/gamification/admin" element={
             <PrivateRoute>
               <GamificationAdminPanel />
+            </PrivateRoute>
+          } />
+          <Route path="/reports" element={
+            <PrivateRoute>
+              <Reports />
             </PrivateRoute>
           } />
           <Route path="/settings/*" element={

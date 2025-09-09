@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Mail, Phone, MessageSquare, Filter, Search, Star, Archive, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { useEffect } from 'react';
 
 interface Message {
   id: string;
@@ -22,8 +23,34 @@ interface Message {
 export const InboxView: React.FC = () => {
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [filter, setFilter] = useState('all');
+  const [messages, setMessages] = useState<Message[]>([]);
 
-  const messages: Message[] = []; // In production, fetch from API
+  useEffect(() => {
+    // Load sample messages for demonstration
+    const sampleMessages: Message[] = [
+      {
+        id: '1',
+        type: 'email',
+        subject: 'Follow up on proposal',
+        content: 'Hi, I wanted to follow up on the proposal we discussed last week...',
+        sender: {
+          name: 'John Smith',
+          email: 'john@example.com'
+        },
+        timestamp: new Date(),
+        isRead: false,
+        isStarred: false,
+        labels: ['important']
+      }
+    ];
+    setMessages(sampleMessages);
+  }, []);
+
+  const filteredMessages = messages.filter(message => {
+    if (filter === 'unread') return !message.isRead;
+    if (filter === 'starred') return message.isStarred;
+    return true;
+  });
 
   return (
     <div className="bg-white rounded-lg shadow-lg h-[calc(100vh-2rem)] flex overflow-hidden">

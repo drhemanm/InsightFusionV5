@@ -4,6 +4,7 @@ import { TaskList } from './TaskList';
 import { CreateTaskModal } from './CreateTaskModal';
 import { ReminderManager } from '../reminders/ReminderManager';
 import type { Task } from '../../types';
+import { useEffect } from 'react';
 
 export const TaskDashboard: React.FC = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -20,6 +21,11 @@ export const TaskDashboard: React.FC = () => {
       relatedTo: undefined
     }
   ]);
+
+  useEffect(() => {
+    // In production, fetch tasks from API
+    console.log('Tasks loaded:', tasks.length);
+  }, []);
 
   const handleCreateTask = (taskData: Omit<Task, 'id'>) => {
     const newTask: Task = {

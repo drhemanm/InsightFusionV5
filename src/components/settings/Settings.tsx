@@ -6,9 +6,19 @@ import { IntegrationsTab } from './IntegrationsTab';
 import { SecurityTab } from './SecurityTab';
 import { AppearanceTab } from './AppearanceTab';
 import { LanguageTab } from './LanguageTab';
+import { useAuthStore } from '../../store/authStore';
 
 export const Settings: React.FC = () => {
   const [activeTab, setActiveTab] = useState('profile');
+  const { user } = useAuthStore();
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   const tabs = [
     { id: 'profile', label: 'Profile', icon: User },

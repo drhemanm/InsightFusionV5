@@ -5,6 +5,8 @@ import { Leaderboard } from './Leaderboard';
 import { Achievements } from './Achievements';
 import { Challenges } from './Challenges';
 import { ThemeSelector } from './ThemeSelector';
+import { GamificationUserSettings } from './settings/GamificationUserSettings';
+import { GamificationAdminPanel } from './admin/GamificationAdminPanel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/Tabs';
 import { useThemeStore } from '../../store/themeStore';
 import { useAuthStore } from '../../store/authStore';
@@ -62,20 +64,14 @@ export const GamificationDashboard: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="settings">
-          {isAdmin ? (
-            <GamificationAdminPanel />
-          ) : (
-            <div className="space-y-6">
-              <ThemeSelector />
-              <div className="bg-blue-50 rounded-lg p-6">
-                <h3 className="font-medium text-blue-900 mb-2">Need More Control?</h3>
-                <p className="text-blue-800 text-sm">
-                  Contact your administrator to customize achievements, badges, and rewards.
-                </p>
-              </div>
-            </div>
-          )}
+          <GamificationUserSettings />
         </TabsContent>
+
+        {isAdmin && (
+          <TabsContent value="admin">
+            <GamificationAdminPanel />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );
