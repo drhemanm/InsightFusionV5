@@ -218,6 +218,3 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading: loading });
   }
 }));
-    console.log('🔄 Setting loading state:', loading);
-  }
-}));
