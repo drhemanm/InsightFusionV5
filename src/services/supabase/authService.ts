@@ -3,11 +3,6 @@ import { logger } from '../../utils/monitoring/logger';
 import type { User } from '../../types/auth';
 
 export class SupabaseAuthService {
-import { supabase } from '../../config/supabase';
-import { logger } from '../../utils/monitoring/logger';
-import type { User, LoginCredentials, AuthResponse } from '../../types/auth';
-
-export class SupabaseAuthService {
   static async signInWithGoogle(): Promise<{ success: boolean; user?: User; error?: string }> {
     try {
       console.log('🔐 Starting Google OAuth...');
