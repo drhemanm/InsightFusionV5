@@ -27,17 +27,27 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       console.log('🚀 Initiating Google OAuth flow...');
+      
+      // Test Supabase connection first
+      try {
+        const { error: connectionError } = await supabase.from('users').select('count', { count: 'exact', head: true });
+        if (connectionError) {
+          throw new Error(`Supabase connection failed: ${connectionError.message}`);
+        }
+      } catch (connectionError: any) {
+        console.error('❌ Supabase connection test failed:', connectionError);
+        set({ 
+          error: 'Unable to connect to authentication service. Please check your internet connection or try again later.',
+          isLoading: false 
+        });
+        return { success: false };
+      }
+      
       const result = await SupabaseAuthService.signInWithGoogle();
       
       if (result.success) {
         console.log('✅ Google OAuth flow started successfully');
-        // Set loading to false after a short delay to prevent infinite loading
-        setTimeout(() => {
-          const currentState = get();
-          if (!currentState.isAuthenticated) {
-            set({ isLoading: false });
-          }
-        }, 5000);
+        // Don't set loading to false here - let the auth state change handle it
         return { success: true, redirected: true };
       } else {
         console.error('❌ Google OAuth failed:', result.error);
@@ -62,6 +72,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       console.log('🔐 Starting email authentication for:', email);
+      
+      // Test Supabase connection first
+      try {
+        const { error: connectionError } = await supabase.from('users').select('count', { count: 'exact', head: true });
+        if (connectionError) {
+          throw new Error(`Supabase connection failed: ${connectionError.message}`);
+        }
+      } catch (connectionError: any) {
+        console.error('❌ Supabase connection test failed:', connectionError);
+        set({ 
+          error: 'Unable to connect to authentication service. Please check your internet connection or try again later.',
+          isLoading: false 
+        });
+        return false;
+      }
+      
       const result = await SupabaseAuthService.signInWithEmail(email, password);
       
       if (result.success && result.user) {
@@ -95,6 +121,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       console.log('📝 Starting user registration for:', email);
+      
+      // Test Supabase connection first
+      try {
+        const { error: connectionError } = await supabase.from('users').select('count', { count: 'exact', head: true });
+        if (connectionError) {
+          throw new Error(`Supabase connection failed: ${connectionError.message}`);
+        }
+      } catch (connectionError: any) {
+        console.error('❌ Supabase connection test failed:', connectionError);
+        set({ 
+          error: 'Unable to connect to authentication service. Please check your internet connection or try again later.',
+          isLoading: false 
+        });
+        return false;
+      }
+      
       const result = await SupabaseAuthService.signUp(email, password, {
         firstName,
         lastName,
@@ -172,4 +214,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     });
   },
   setLoading: (loading) => set({ isLoading: loading })
+    console.log('🔄 Setting loading state:', loading);
+  }
 }));

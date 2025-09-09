@@ -240,7 +240,15 @@ export const LoginForm: React.FC = () => {
                     <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                        {error}
+                        <div>
+                          <div className="font-medium">Authentication Error</div>
+                          <div className="text-sm">{error}</div>
+                          {error.includes('connect') && (
+                            <div className="text-xs mt-1 text-red-600">
+                              Try refreshing the page or check your internet connection
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   )}
