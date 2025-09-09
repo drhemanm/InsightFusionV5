@@ -126,7 +126,6 @@ export const UserProfile: React.FC<{ userId: string }> = ({ userId }) => {
             <div className="text-sm text-gray-600">Revenue Generated</div>
           </div>
         </div>
-        </div>
       </div>
     </div>
   );
