@@ -61,9 +61,18 @@ export const RegisterForm: React.FC = () => {
   };
 
   const handleGoogleSignUp = async () => {
-    const result = await loginWithGoogle();
-    if (result.success) {
-      navigate('/dashboard');
+    try {
+      console.log('🔐 Starting Google sign-up...');
+      const result = await loginWithGoogle();
+      
+      if (result.success) {
+        console.log('✅ Google sign-up initiated successfully');
+        // OAuth redirect will handle navigation
+      } else {
+        console.error('❌ Google sign-up failed:', result.error);
+      }
+    } catch (error) {
+      console.error('❌ Unexpected Google sign-up error:', error);
     }
   };
 
