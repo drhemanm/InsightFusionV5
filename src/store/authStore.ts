@@ -213,7 +213,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       error: null 
     });
   },
-  setLoading: (loading) => set({ isLoading: loading })
+  setLoading: (loading) => {
+    console.log('🔄 Setting loading state:', loading);
+    set({ isLoading: loading });
+  }
+}));
     console.log('🔄 Setting loading state:', loading);
   }
 }));
