@@ -1,29 +1,64 @@
 import React from 'react';
-import { Palette, Monitor, Sun, Moon, Layout } from 'lucide-react';
-import { useTheme } from '../../context/ThemeContext';
+import { Palette, Monitor, Sun, Moon, Layout, Eye, Type, Contrast } from 'lucide-react';
+import { useThemeStore } from '../../store/themeStore';
 
 export const AppearanceTab: React.FC = () => {
-  const { settings, updateSettings } = useTheme();
+  const { currentTheme, setTheme } = useThemeStore();
+  const [settings, setSettings] = React.useState({
+    theme: 'light',
+    accentColor: '#3B82F6',
+    fontSize: 'normal',
+    layout: 'default',
+    reducedMotion: false,
+    highContrast: false
+  });
 
   const colors = [
     { id: 'blue', value: '#3B82F6', label: 'Blue' },
     { id: 'purple', value: '#8B5CF6', label: 'Purple' },
     { id: 'green', value: '#10B981', label: 'Green' },
-    { id: 'red', value: '#EF4444', label: 'Red' }
+    { id: 'red', value: '#EF4444', label: 'Red' },
+    { id: 'orange', value: '#F59E0B', label: 'Orange' },
+    { id: 'pink', value: '#EC4899', label: 'Pink' }
   ];
 
   const fontSizes = [
     { value: 'small', label: 'Small' },
     { value: 'normal', label: 'Normal' },
-    { value: 'large', label: 'Large' }
+    { value: 'large', label: 'Large' },
+    { value: 'extra-large', label: 'Extra Large' }
   ];
 
   const layouts = [
     { value: 'default', label: 'Default' },
     { value: 'compact', label: 'Compact' },
-    { value: 'comfortable', label: 'Comfortable' }
+    { value: 'comfortable', label: 'Comfortable' },
+    { value: 'spacious', label: 'Spacious' }
   ];
 
+  const updateSettings = (newSettings: any) => {
+    setSettings({ ...settings, ...newSettings });
+    
+    // Apply theme changes immediately
+    if (newSettings.theme) {
+      document.documentElement.setAttribute('data-theme', newSettings.theme);
+    }
+    if (newSettings.accentColor) {
+      document.documentElement.style.setProperty('--accent-color', newSettings.accentColor);
+    }
+    if (newSettings.fontSize) {
+      document.documentElement.setAttribute('data-font-size', newSettings.fontSize);
+    }
+    if (newSettings.reducedMotion !== undefined) {
+      document.documentElement.style.setProperty(
+        '--animation-duration', 
+        newSettings.reducedMotion ? '0s' : '0.3s'
+      );
+    }
+    
+    // Save to localStorage
+    localStorage.setItem('appearanceSettings', JSON.stringify({ ...settings, ...newSettings }));
+  };
   return (
     <div className="space-y-6">
       <h2 className="text-lg font-medium">Appearance Settings</h2>

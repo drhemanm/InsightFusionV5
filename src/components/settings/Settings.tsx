@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Settings as SettingsIcon, Mail, Bell, Lock, Globe, Puzzle, Shield, Palette, User } from 'lucide-react';
+import { Settings as SettingsIcon, User, Bell, Puzzle, Shield, Palette, Globe, Lock } from 'lucide-react';
 import { ProfileSettings } from './ProfileSettings';
 import { NotificationsSettings } from './NotificationsSettings';
 import { IntegrationsTab } from './IntegrationsTab';
 import { SecurityTab } from './SecurityTab';
 import { AppearanceTab } from './AppearanceTab';
+import { LanguageTab } from './LanguageTab';
 
 export const Settings: React.FC = () => {
   const [activeTab, setActiveTab] = useState('profile');
@@ -12,9 +13,10 @@ export const Settings: React.FC = () => {
   const tabs = [
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'notifications', label: 'Notifications', icon: Bell },
+    { id: 'appearance', label: 'Appearance', icon: Palette },
+    { id: 'language', label: 'Language & Region', icon: Globe },
     { id: 'integrations', label: 'Integrations', icon: Puzzle },
-    { id: 'security', label: 'Security', icon: Shield },
-    { id: 'appearance', label: 'Appearance', icon: Palette }
+    { id: 'security', label: 'Security', icon: Shield }
   ];
 
   return (
@@ -49,9 +51,10 @@ export const Settings: React.FC = () => {
           <div className="col-span-9 p-6">
             {activeTab === 'profile' && <ProfileSettings />}
             {activeTab === 'notifications' && <NotificationsSettings />}
+            {activeTab === 'appearance' && <AppearanceTab />}
+            {activeTab === 'language' && <LanguageTab />}
             {activeTab === 'integrations' && <IntegrationsTab />}
             {activeTab === 'security' && <SecurityTab />}
-            {activeTab === 'appearance' && <AppearanceTab />}
           </div>
         </div>
       </div>

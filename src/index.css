@@ -109,3 +109,48 @@
     @apply hidden;
   }
 }
+
+/* Theme and appearance utilities */
+[data-theme="dark"] {
+  --bg-primary: #1f2937;
+  --bg-secondary: #374151;
+  --text-primary: #f9fafb;
+  --text-secondary: #d1d5db;
+  --border-color: #4b5563;
+}
+
+[data-theme="light"] {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9fafb;
+  --text-primary: #1f2937;
+  --text-secondary: #6b7280;
+  --border-color: #e5e7eb;
+}
+
+[data-font-size="small"] {
+  font-size: 14px;
+}
+
+[data-font-size="large"] {
+  font-size: 18px;
+}
+
+[data-font-size="extra-large"] {
+  font-size: 20px;
+}
+
+/* Animation control */
+* {
+  transition-duration: var(--animation-duration, 0.3s);
+}
+
+/* High contrast mode */
+[data-high-contrast="true"] {
+  --text-primary: #000000;
+  --text-secondary: #333333;
+  --border-color: #000000;
+}
+
+[data-high-contrast="true"] button {
+  border: 2px solid #000000;
+}
