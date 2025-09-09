@@ -257,7 +257,7 @@ const App: React.FC = () => {
           
           {/* Catch-all route for 404s */}
           <Route path="*" element={
-            isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/" replace />
+            <Navigate to={isAuthenticated ? "/dashboard" : "/"} replace />
           } />
         </Routes>
       </main>
