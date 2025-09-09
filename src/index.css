@@ -83,3 +83,29 @@
   @apply font-semibold px-8 py-4 rounded-xl;
   @apply transition-all duration-300;
 }
+
+/* Compact header styles */
+.header-compact {
+  @apply h-14;
+}
+
+.nav-compact {
+  @apply text-xs px-2 py-1;
+}
+
+/* Responsive navigation */
+@media (max-width: 1280px) {
+  .nav-item-text {
+    @apply hidden;
+  }
+}
+
+@media (max-width: 768px) {
+  .search-desktop {
+    @apply hidden;
+  }
+  
+  .user-info-desktop {
+    @apply hidden;
+  }
+}
