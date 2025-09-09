@@ -20,7 +20,7 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isAuthenticated: false,
-  isLoading: true, // Start with loading true
+  isLoading: false, // Start with loading false to prevent infinite loading
   error: null,
 
   loginWithGoogle: async () => {
@@ -31,7 +31,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       
       if (result.success) {
         console.log('✅ Google OAuth flow started successfully');
-        // Don't set loading to false here - OAuth redirect will handle it
+        // Set loading to false after a short delay to prevent infinite loading
+        setTimeout(() => {
+          const currentState = get();
+          if (!currentState.isAuthenticated) {
+            set({ isLoading: false });
+          }
+        }, 5000);
         return { success: true, redirected: true };
       } else {
         console.error('❌ Google OAuth failed:', result.error);
@@ -97,9 +103,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       
       if (result.success) {
         console.log('✅ Registration successful');
-        // For email registration, user needs to verify email
-        // Don't set authenticated state yet
-        set({ isLoading: false });
+        // If user is returned, they're automatically signed in
+        if (result.user) {
+          set({ 
+            user: result.user,
+            isAuthenticated: true,
+            isLoading: false 
+          });
+        } else {
+          // Email verification required
+          set({ isLoading: false });
+        }
         return true;
       } else {
         console.error('❌ Registration failed:', result.error);

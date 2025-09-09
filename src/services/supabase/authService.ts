@@ -7,14 +7,13 @@ export class SupabaseAuthService {
     try {
       console.log('🔐 Starting Google OAuth...');
       
-      // Get the current URL for proper redirect
-      const currentUrl = window.location.origin;
-      const redirectUrl = `${currentUrl}/dashboard`;
+      // Use the production URL for redirect
+      const redirectUrl = 'https://glittering-moxie-90edde.netlify.app/dashboard';
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: 'https://insight-fusion-v5.vercel.app/dashboard',
+          redirectTo: redirectUrl,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -79,7 +78,8 @@ export class SupabaseAuthService {
         email,
         password,
         options: {
-          data: metadata
+          data: metadata,
+          emailRedirectTo: 'https://glittering-moxie-90edde.netlify.app/dashboard'
         }
       });
 
@@ -91,6 +91,7 @@ export class SupabaseAuthService {
 
       if (data.user) {
         console.log('✅ Registration successful for:', data.user.email);
+        console.log('📧 Email confirmation required:', !data.user.email_confirmed_at);
         const user = this.transformSupabaseUser(data.user);
         return { success: true, user };
       }

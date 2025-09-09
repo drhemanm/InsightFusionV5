@@ -24,19 +24,35 @@ import { OrganizationDashboard } from './components/organization/OrganizationDas
 import { Documentation } from './components/docs/Documentation';
 
 const App: React.FC = () => {
-  const { isAuthenticated, setUser, clearUser, isLoading } = useAuthStore();
+  const { isAuthenticated, setUser, clearUser, isLoading, setLoading } = useAuthStore();
   
   console.log('App rendering, authenticated:', isAuthenticated);
 
   // Initialize auth state and listen for changes
   useEffect(() => {
+    let mounted = true;
+    let timeoutId: NodeJS.Timeout;
+
     // Check for existing session on app load
     const initializeAuth = async () => {
       try {
+        console.log('🔄 Initializing auth...');
+        
+        // Set a timeout to prevent infinite loading
+        timeoutId = setTimeout(() => {
+          if (mounted) {
+            console.log('⏰ Auth initialization timeout, setting loading to false');
+            setLoading(false);
+          }
+        }, 10000); // 10 second timeout
+
         const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
         
         if (error) {
           console.error('❌ Error getting session:', error);
+          setLoading(false);
           return;
         }
 
@@ -47,9 +63,13 @@ const App: React.FC = () => {
             email: session.user.email!,
             firstName: session.user.user_metadata?.first_name || 
                       session.user.user_metadata?.firstName || 
+                      session.user.user_metadata?.given_name ||
+                      session.user.user_metadata?.name?.split(' ')[0] ||
                       session.user.email?.split('@')[0] || 'User',
             lastName: session.user.user_metadata?.last_name || 
-                     session.user.user_metadata?.lastName || '',
+                     session.user.user_metadata?.lastName || 
+                     session.user.user_metadata?.family_name ||
+                     session.user.user_metadata?.name?.split(' ').slice(1).join(' ') || '',
             role: 'user' as const,
             organizationId: 'default',
             isEmailVerified: session.user.email_confirmed_at !== null,
@@ -58,9 +78,18 @@ const App: React.FC = () => {
           setUser(user);
         } else {
           console.log('ℹ️ No existing session found');
+          setLoading(false);
+        }
+        
+        // Clear timeout if we got here successfully
+        if (timeoutId) {
+          clearTimeout(timeoutId);
         }
       } catch (error) {
         console.error('❌ Error initializing auth:', error);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -69,6 +98,8 @@ const App: React.FC = () => {
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (!mounted) return;
+        
         console.log('🔐 Auth state change:', event, session?.user?.email);
         
         if (event === 'SIGNED_IN' && session?.user) {
@@ -81,10 +112,12 @@ const App: React.FC = () => {
             firstName: session.user.user_metadata?.first_name || 
                       session.user.user_metadata?.firstName || 
                       session.user.user_metadata?.given_name ||
+                      session.user.user_metadata?.name?.split(' ')[0] ||
                       session.user.email?.split('@')[0] || 'User',
             lastName: session.user.user_metadata?.last_name || 
                      session.user.user_metadata?.lastName || 
-                     session.user.user_metadata?.family_name || '',
+                     session.user.user_metadata?.family_name ||
+                     session.user.user_metadata?.name?.split(' ').slice(1).join(' ') || '',
             role: 'user' as const,
             organizationId: 'default',
             isEmailVerified: session.user.email_confirmed_at !== null,
@@ -96,6 +129,12 @@ const App: React.FC = () => {
         } else if (event === 'SIGNED_OUT') {
           console.log('🚪 User signed out');
           clearUser();
+        } else if (event === 'INITIAL_SESSION') {
+          console.log('🔄 Initial session check completed');
+          // If no session found, stop loading
+          if (!session) {
+            setLoading(false);
+          }
         } else if (event === 'TOKEN_REFRESHED') {
           console.log('🔄 Token refreshed');
         } else {
@@ -104,7 +143,13 @@ const App: React.FC = () => {
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      subscription.unsubscribe();
+    };
   }, [setUser, clearUser]);
 
   // Show loading state while checking authentication
@@ -113,11 +158,13 @@ const App: React.FC = () => {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <p className="text-gray-600">Checking authentication...</p>
+          <p className="text-sm text-gray-500 mt-2">This should only take a few seconds</p>
         </div>
       </div>
     );
   }
+  
   return (
     <div className="min-h-screen bg-gray-50">
       {isAuthenticated && <Header />}
