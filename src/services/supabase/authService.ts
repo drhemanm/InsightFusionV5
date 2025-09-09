@@ -148,4 +148,3 @@ export class SupabaseAuthService {
 }
 
 export const authService = SupabaseAuthService;
-}
