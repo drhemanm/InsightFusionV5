@@ -208,3 +208,6 @@ export const LandingPage: React.FC = () => {
           </div>
         </div>
       </div>
+    </div>
+  );
+};
