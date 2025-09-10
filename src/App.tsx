@@ -25,6 +25,7 @@ import { Documentation } from './components/docs/Documentation';
 import { GamificationAdminPanel } from './components/gamification/admin/GamificationAdminPanel';
 import { DatabaseAuditPanel } from './components/admin/DatabaseAuditPanel';
 import { DatabaseStatus } from './components/admin/DatabaseStatus';
+import { DatabaseDiagnostic } from './components/admin/DatabaseDiagnostic';
 import { Reports } from './components/reports/Reports';
 
 const App: React.FC = () => {
@@ -264,6 +265,11 @@ const App: React.FC = () => {
           <Route path="/admin/database" element={
             <PrivateRoute>
               <DatabaseAuditPanel />
+            </PrivateRoute>
+          } />
+          <Route path="/admin/diagnostic" element={
+            <PrivateRoute>
+              <DatabaseDiagnostic />
             </PrivateRoute>
           } />
           
