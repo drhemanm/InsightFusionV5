@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Settings, Trophy, Star, Target, Gift, Palette, Users, BarChart3, Save, Plus, Edit2, Trash2 } from 'lucide-react';
 import { useGamificationStore } from '../../../store/gamificationStore';
 import { useThemeStore } from '../../../store/themeStore';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/Tabs';
 
 export const GamificationAdminPanel: React.FC = () => {
   const { achievements, badges, challenges, updateConfig } = useGamificationStore();
