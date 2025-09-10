@@ -155,29 +155,144 @@ export const LandingPage: React.FC = () => {
           })}
         </div>
 
-        {/* Social Proof */}
+        {/* Pricing Section */}
         <div className="text-center mb-24">
-          <h2 className="text-3xl font-bold text-white mb-4">Trusted by Industry Leaders</h2>
-          <p className="text-gray-300 mb-12">Join thousands of companies already growing with InsightFusion</p>
+          <h2 className="text-3xl font-bold text-white mb-4">Choose Your Plan</h2>
+          <p className="text-gray-300 mb-12">Start with a plan that fits your business needs</p>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <div
-                key={index}
-                className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/10 transition-all duration-300"
-              >
-                <div className="flex items-center gap-1 mb-4">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="h-4 w-4 text-yellow-400 fill-yellow-400" />
-                  ))}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {/* Basic Plan */}
+            <div className="relative bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/10 transition-all duration-300 hover:scale-105">
+              <div className="text-center">
+                <h3 className="text-2xl font-bold text-white mb-2">Basic</h3>
+                <div className="flex items-baseline justify-center mb-6">
+                  <span className="text-4xl font-bold text-white">MUR 200</span>
+                  <span className="text-gray-300 ml-2">/month</span>
                 </div>
-                <p className="text-gray-300 mb-6 italic">"{testimonial.content}"</p>
-                <div className="text-left">
-                  <div className="font-semibold text-white">{testimonial.name}</div>
-                  <div className="text-sm text-gray-400">{testimonial.role} at {testimonial.company}</div>
-                </div>
+                <ul className="space-y-4 mb-8 text-left">
+                  <li className="flex items-center gap-3 text-white">
+                    <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0" />
+                    <span>Up to 5 team members</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-white">
+                    <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0" />
+                    <span>1,000 contacts</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-white">
+                    <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0" />
+                    <span>Core CRM features</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-white">
+                    <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0" />
+                    <span>Basic reporting</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-white">
+                    <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0" />
+                    <span>10GB storage</span>
+                  </li>
+                </ul>
+                <Link
+                  to="/register"
+                  state={{ selectedPlan: 'basic' }}
+                  className="block w-full bg-white/10 hover:bg-white/20 text-white py-3 px-6 rounded-xl font-semibold transition-all duration-300 backdrop-blur-sm border border-white/20 hover:border-white/30"
+                >
+                  Get Started
+                </Link>
               </div>
-            ))}
+            </div>
+
+            {/* Professional Plan */}
+            <div className="relative bg-gradient-to-br from-blue-600/20 to-purple-600/20 backdrop-blur-sm rounded-2xl p-8 border-2 border-blue-400/50 hover:border-blue-400/70 transition-all duration-300 hover:scale-105 transform">
+              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                <span className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-2 rounded-full text-sm font-semibold">
+                  Most Popular
+                </span>
+              </div>
+              <div className="text-center">
+                <h3 className="text-2xl font-bold text-white mb-2">Professional</h3>
+                <div className="flex items-baseline justify-center mb-6">
+                  <span className="text-4xl font-bold text-white">MUR 400</span>
+                  <span className="text-gray-300 ml-2">/month</span>
+                </div>
+                <ul className="space-y-4 mb-8 text-left">
+                  <li className="flex items-center gap-3 text-white">
+                    <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0" />
+                    <span>Up to 20 team members</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-white">
+                    <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0" />
+                    <span>10,000 contacts</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-white">
+                    <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0" />
+                    <span>Advanced analytics</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-white">
+                    <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0" />
+                    <span>AI-powered insights</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-white">
+                    <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0" />
+                    <span>API access</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-white">
+                    <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0" />
+                    <span>50GB storage</span>
+                  </li>
+                </ul>
+                <Link
+                  to="/register"
+                  state={{ selectedPlan: 'professional' }}
+                  className="block w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 px-6 rounded-xl font-semibold transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/25"
+                >
+                  Start Free Trial
+                </Link>
+              </div>
+            </div>
+
+            {/* Enterprise Plan */}
+            <div className="relative bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/10 transition-all duration-300 hover:scale-105">
+              <div className="text-center">
+                <h3 className="text-2xl font-bold text-white mb-2">Enterprise</h3>
+                <div className="flex items-baseline justify-center mb-6">
+                  <span className="text-4xl font-bold text-white">MUR 600</span>
+                  <span className="text-gray-300 ml-2">/month</span>
+                </div>
+                <ul className="space-y-4 mb-8 text-left">
+                  <li className="flex items-center gap-3 text-white">
+                    <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0" />
+                    <span>Unlimited team members</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-white">
+                    <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0" />
+                    <span>Unlimited contacts</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-white">
+                    <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0" />
+                    <span>Custom integrations</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-white">
+                    <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0" />
+                    <span>White-label options</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-white">
+                    <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0" />
+                    <span>Dedicated support</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-white">
+                    <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0" />
+                    <span>500GB storage</span>
+                  </li>
+                </ul>
+                <Link
+                  to="/register"
+                  state={{ selectedPlan: 'enterprise' }}
+                  className="block w-full bg-white/10 hover:bg-white/20 text-white py-3 px-6 rounded-xl font-semibold transition-all duration-300 backdrop-blur-sm border border-white/20 hover:border-white/30"
+                >
+                  Contact Sales
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
 
