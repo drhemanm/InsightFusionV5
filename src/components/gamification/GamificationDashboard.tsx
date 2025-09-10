@@ -2,7 +2,7 @@ import React from 'react';
 import { Trophy, Star, Target, Users, TrendingUp, Award } from 'lucide-react';
 import { UserProgress } from './UserProgress';
 import { Achievements } from './Achievements';
-import { Badges } from './BadgeGrid';
+import { Badges } from './Badges';
 import { Challenges } from './Challenges';
 import { Leaderboard } from './Leaderboard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/Tabs';
