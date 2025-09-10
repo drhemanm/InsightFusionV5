@@ -26,30 +26,6 @@ export const LandingPage: React.FC = () => {
     }
   ];
 
-  const testimonials = [
-    {
-      name: 'Sarah Johnson',
-      role: 'Sales Director',
-      company: 'TechCorp',
-      content: 'InsightFusion transformed our sales process. We increased our conversion rate by 40% in just 3 months.',
-      rating: 5
-    },
-    {
-      name: 'Michael Chen',
-      role: 'CEO',
-      company: 'GrowthLabs',
-      content: 'The AI insights are game-changing. We can now predict which deals will close with 90% accuracy.',
-      rating: 5
-    },
-    {
-      name: 'Emily Rodriguez',
-      role: 'VP Sales',
-      company: 'InnovateCo',
-      content: 'Best CRM investment we\'ve made. The team collaboration features are outstanding.',
-      rating: 5
-    }
-  ];
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
       {/* Navigation */}
