@@ -26,8 +26,65 @@ export const LandingPage: React.FC = () => {
     }
   ];
 
+  const plans = [
+    {
+      id: 'basic',
+      name: 'Basic',
+      price: 200,
+      description: 'Perfect for small teams getting started',
+      features: [
+        'Up to 5 team members',
+        '1,000 contacts',
+        'Core CRM features',
+        'Basic reporting',
+        '10GB storage',
+        'Email support'
+      ],
+      popular: false
+    },
+    {
+      id: 'professional',
+      name: 'Professional',
+      price: 400,
+      description: 'Best for growing businesses',
+      features: [
+        'Up to 20 team members',
+        '10,000 contacts',
+        'Advanced analytics',
+        'AI-powered insights',
+        'API access',
+        '50GB storage',
+        'Priority support'
+      ],
+      popular: true
+    },
+    {
+      id: 'enterprise',
+      name: 'Enterprise',
+      price: 600,
+      description: 'For large organizations',
+      features: [
+        'Unlimited team members',
+        'Unlimited contacts',
+        'Custom integrations',
+        'White-label options',
+        'Dedicated support',
+        '500GB storage',
+        'SLA guarantees'
+      ],
+      popular: false
+    }
+  ];
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
+      {/* Background Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-indigo-500 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-pulse delay-500"></div>
+      </div>
+
       {/* Navigation */}
       <nav className="relative z-10 px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -133,142 +190,62 @@ export const LandingPage: React.FC = () => {
 
         {/* Pricing Section */}
         <div className="text-center mb-24">
-          <h2 className="text-3xl font-bold text-white mb-4">Choose Your Plan</h2>
-          <p className="text-gray-300 mb-12">Start with a plan that fits your business needs</p>
+          <h2 className="text-4xl font-bold text-white mb-4">Choose Your Plan</h2>
+          <p className="text-xl text-gray-300 mb-12 max-w-2xl mx-auto">
+            Start with a plan that fits your business needs. All plans include a 14-day free trial.
+          </p>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {/* Basic Plan */}
-            <div className="relative bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/10 transition-all duration-300 hover:scale-105">
-              <div className="text-center">
-                <h3 className="text-2xl font-bold text-white mb-2">Basic</h3>
-                <div className="flex items-baseline justify-center mb-6">
-                  <span className="text-4xl font-bold text-white">MUR 200</span>
-                  <span className="text-gray-300 ml-2">/month</span>
+            {plans.map((plan) => (
+              <div
+                key={plan.id}
+                className={`relative p-8 rounded-2xl border transition-all duration-300 hover:scale-105 ${
+                  plan.popular
+                    ? 'bg-gradient-to-br from-blue-600/20 to-purple-600/20 backdrop-blur-sm border-2 border-blue-400/50 hover:border-blue-400/70'
+                    : 'bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10'
+                }`}
+              >
+                {plan.popular && (
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                    <span className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2">
+                      <Star className="h-4 w-4" />
+                      Most Popular
+                    </span>
+                  </div>
+                )}
+                
+                <div className="text-center">
+                  <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
+                  <p className="text-gray-300 mb-6">{plan.description}</p>
+                  
+                  <div className="flex items-baseline justify-center mb-8">
+                    <span className="text-5xl font-bold text-white">MUR {plan.price}</span>
+                    <span className="text-gray-300 ml-2 text-lg">/month</span>
+                  </div>
+                  
+                  <ul className="space-y-4 mb-8 text-left">
+                    {plan.features.map((feature, index) => (
+                      <li key={index} className="flex items-center gap-3 text-white">
+                        <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0" />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  
+                  <Link
+                    to="/register"
+                    state={{ selectedPlan: plan.id }}
+                    className={`block w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
+                      plan.popular
+                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white hover:shadow-xl hover:shadow-blue-500/25'
+                        : 'bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm border border-white/20 hover:border-white/30'
+                    }`}
+                  >
+                    {plan.popular ? 'Start Free Trial' : 'Get Started'}
+                  </Link>
                 </div>
-                <ul className="space-y-4 mb-8 text-left">
-                  <li className="flex items-center gap-3 text-white">
-                    <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0" />
-                    <span>Up to 5 team members</span>
-                  </li>
-                  <li className="flex items-center gap-3 text-white">
-                    <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0" />
-                    <span>1,000 contacts</span>
-                  </li>
-                  <li className="flex items-center gap-3 text-white">
-                    <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0" />
-                    <span>Core CRM features</span>
-                  </li>
-                  <li className="flex items-center gap-3 text-white">
-                    <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0" />
-                    <span>Basic reporting</span>
-                  </li>
-                  <li className="flex items-center gap-3 text-white">
-                    <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0" />
-                    <span>10GB storage</span>
-                  </li>
-                </ul>
-                <Link
-                  to="/register"
-                  state={{ selectedPlan: 'basic' }}
-                  className="block w-full bg-white/10 hover:bg-white/20 text-white py-3 px-6 rounded-xl font-semibold transition-all duration-300 backdrop-blur-sm border border-white/20 hover:border-white/30"
-                >
-                  Get Started
-                </Link>
               </div>
-            </div>
-
-            {/* Professional Plan */}
-            <div className="relative bg-gradient-to-br from-blue-600/20 to-purple-600/20 backdrop-blur-sm rounded-2xl p-8 border-2 border-blue-400/50 hover:border-blue-400/70 transition-all duration-300 hover:scale-105 transform">
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <span className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-2 rounded-full text-sm font-semibold">
-                  Most Popular
-                </span>
-              </div>
-              <div className="text-center">
-                <h3 className="text-2xl font-bold text-white mb-2">Professional</h3>
-                <div className="flex items-baseline justify-center mb-6">
-                  <span className="text-4xl font-bold text-white">MUR 400</span>
-                  <span className="text-gray-300 ml-2">/month</span>
-                </div>
-                <ul className="space-y-4 mb-8 text-left">
-                  <li className="flex items-center gap-3 text-white">
-                    <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0" />
-                    <span>Up to 20 team members</span>
-                  </li>
-                  <li className="flex items-center gap-3 text-white">
-                    <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0" />
-                    <span>10,000 contacts</span>
-                  </li>
-                  <li className="flex items-center gap-3 text-white">
-                    <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0" />
-                    <span>Advanced analytics</span>
-                  </li>
-                  <li className="flex items-center gap-3 text-white">
-                    <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0" />
-                    <span>AI-powered insights</span>
-                  </li>
-                  <li className="flex items-center gap-3 text-white">
-                    <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0" />
-                    <span>API access</span>
-                  </li>
-                  <li className="flex items-center gap-3 text-white">
-                    <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0" />
-                    <span>50GB storage</span>
-                  </li>
-                </ul>
-                <Link
-                  to="/register"
-                  state={{ selectedPlan: 'professional' }}
-                  className="block w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 px-6 rounded-xl font-semibold transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/25"
-                >
-                  Start Free Trial
-                </Link>
-              </div>
-            </div>
-
-            {/* Enterprise Plan */}
-            <div className="relative bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/10 transition-all duration-300 hover:scale-105">
-              <div className="text-center">
-                <h3 className="text-2xl font-bold text-white mb-2">Enterprise</h3>
-                <div className="flex items-baseline justify-center mb-6">
-                  <span className="text-4xl font-bold text-white">MUR 600</span>
-                  <span className="text-gray-300 ml-2">/month</span>
-                </div>
-                <ul className="space-y-4 mb-8 text-left">
-                  <li className="flex items-center gap-3 text-white">
-                    <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0" />
-                    <span>Unlimited team members</span>
-                  </li>
-                  <li className="flex items-center gap-3 text-white">
-                    <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0" />
-                    <span>Unlimited contacts</span>
-                  </li>
-                  <li className="flex items-center gap-3 text-white">
-                    <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0" />
-                    <span>Custom integrations</span>
-                  </li>
-                  <li className="flex items-center gap-3 text-white">
-                    <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0" />
-                    <span>White-label options</span>
-                  </li>
-                  <li className="flex items-center gap-3 text-white">
-                    <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0" />
-                    <span>Dedicated support</span>
-                  </li>
-                  <li className="flex items-center gap-3 text-white">
-                    <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0" />
-                    <span>500GB storage</span>
-                  </li>
-                </ul>
-                <Link
-                  to="/register"
-                  state={{ selectedPlan: 'enterprise' }}
-                  className="block w-full bg-white/10 hover:bg-white/20 text-white py-3 px-6 rounded-xl font-semibold transition-all duration-300 backdrop-blur-sm border border-white/20 hover:border-white/30"
-                >
-                  Contact Sales
-                </Link>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
 
@@ -278,9 +255,9 @@ export const LandingPage: React.FC = () => {
             Ready to Transform Your Sales?
           </h2>
           <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-            Join the AI revolution in customer relationship management. Start your free trial today.
+            Join thousands of businesses already using InsightFusion to accelerate their sales and improve customer relationships.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
             <Link
               to="/register"
               className="group relative overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/25 hover:scale-105"
@@ -289,6 +266,7 @@ export const LandingPage: React.FC = () => {
                 <span>Get Started Free</span>
                 <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </div>
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
             </Link>
             <Link
               to="/contact"
@@ -296,6 +274,22 @@ export const LandingPage: React.FC = () => {
             >
               Talk to Sales
             </Link>
+          </div>
+          
+          {/* Trust Indicators */}
+          <div className="flex items-center justify-center gap-8 text-sm text-gray-400">
+            <div className="flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              <span>SOC 2 Compliant</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Zap className="h-4 w-4" />
+              <span>99.9% Uptime</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-4 w-4" />
+              <span>GDPR Ready</span>
+            </div>
           </div>
         </div>
       </div>
