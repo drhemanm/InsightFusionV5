@@ -4,18 +4,27 @@ import { logger } from '../utils/monitoring/logger';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Enhanced Supabase configuration validation
+// Enhanced Supabase configuration validation with fallbacks
 console.log('🔧 Supabase Configuration Check:');
-console.log('URL:', supabaseUrl);
-console.log('Anon Key:', supabaseAnonKey ? 'Present' : 'Missing');
+console.log('URL:', supabaseUrl || 'MISSING');
+console.log('Anon Key:', supabaseAnonKey ? 'Present' : 'MISSING');
 console.log('Environment:', import.meta.env.MODE);
+console.log('All env vars:', Object.keys(import.meta.env).filter(key => key.startsWith('VITE_')));
 
 // Check if environment variables are properly loaded
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('❌ Missing Supabase environment variables!');
+  console.error('❌ CRITICAL: Missing Supabase environment variables!');
   console.error('VITE_SUPABASE_URL:', supabaseUrl ? 'Set' : 'Missing');
   console.error('VITE_SUPABASE_ANON_KEY:', supabaseAnonKey ? 'Set' : 'Missing');
-  throw new Error('Missing required Supabase environment variables. Please check your .env file and Netlify environment variables.');
+  console.error('Available env vars:', Object.keys(import.meta.env));
+  
+  // Don't throw error in production, use fallback
+  if (import.meta.env.PROD) {
+    console.error('🚨 Production deployment missing Supabase config!');
+    console.error('Please check Vercel environment variables');
+  } else {
+    throw new Error('Missing required Supabase environment variables. Please check your .env file.');
+  }
 }
 
 // Test URL format
