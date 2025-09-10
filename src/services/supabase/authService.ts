@@ -51,7 +51,12 @@ export class SupabaseAuthService {
       if (error) {
         console.error('❌ Email login error:', error);
         logger.error('Email sign in failed', { error });
-        return { success: false, error: error.message };
+        return { 
+          success: false, 
+          error: error.message === 'Invalid login credentials' 
+            ? 'Invalid email or password. Please check your credentials and try again.'
+            : error.message
+        };
       }
 
       if (data.user) {
@@ -65,7 +70,10 @@ export class SupabaseAuthService {
     } catch (error: any) {
       console.error('❌ Email login exception:', error);
       logger.error('Email sign in error', { error });
-      return { success: false, error: error.message };
+      return { 
+        success: false, 
+        error: 'Login failed. Please check your internet connection and try again.'
+      };
     }
   }
 

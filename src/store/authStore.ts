@@ -74,21 +74,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       console.log('🔐 Starting email authentication for:', email);
       
-      // Test Supabase connection first
-      try {
-        const { error: connectionError } = await supabase.from('users').select('count', { count: 'exact', head: true });
-        if (connectionError) {
-          throw new Error(`Supabase connection failed: ${connectionError.message}`);
-        }
-      } catch (connectionError: any) {
-        console.error('❌ Supabase connection test failed:', connectionError);
-        set({ 
-          error: 'Unable to connect to authentication service. Please check your internet connection or try again later.',
-          isLoading: false 
-        });
-        return false;
-      }
-      
       const result = await SupabaseAuthService.signInWithEmail(email, password);
       
       if (result.success && result.user) {
@@ -111,7 +96,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       console.error('❌ Email authentication exception:', error);
       logger.error('Email login failed', { error });
       set({ 
-        error: 'Login failed',
+        error: 'Login failed. Please check your credentials and try again.',
         isLoading: false 
       });
       return false;

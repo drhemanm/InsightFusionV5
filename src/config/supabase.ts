@@ -103,15 +103,13 @@ supabase.auth.onAuthStateChange((event, session) => {
 });
 
 // Test connection on initialization
-supabase.from('users').select('count', { count: 'exact', head: true })
-  .then(({ error }) => {
+// Test basic connection without relying on specific tables
+supabase.auth.getSession()
+  .then(({ data, error }) => {
     if (error) {
-      console.error('❌ Supabase database connection failed:', error.message);
-      if (error.message.includes('refused') || error.message.includes('timeout')) {
-        console.log('💡 Your Supabase project might be paused. Check your Supabase dashboard.');
-      }
+      console.error('❌ Supabase auth connection failed:', error.message);
     } else {
-      console.log('✅ Supabase database connection successful');
+      console.log('✅ Supabase auth connection successful');
     }
   })
   .catch((error) => {
