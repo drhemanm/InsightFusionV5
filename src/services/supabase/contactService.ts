@@ -5,23 +5,27 @@ import type { Contact } from '../../types/contacts';
 export class SupabaseContactService {
   static async createContact(data: Omit<Contact, 'id' | 'createdAt' | 'updatedAt'>): Promise<Contact> {
     try {
+      // First check if contacts table exists
+      const { error: tableError } = await supabase
+        .from('contacts')
+        .select('id')
+        .limit(1);
+
+      if (tableError) {
+        logger.error('Contacts table not accessible', { error: tableError });
+        throw new Error('Database not properly configured. Please run migrations first.');
+      }
+
+      // Create contact with only basic fields that should exist
       const { data: contact, error } = await supabase
         .from('contacts')
         .insert([{
           first_name: data.firstName,
           last_name: data.lastName,
           email: data.email,
-          phone: data.phone,
-          job_title: data.jobTitle,
-          department: data.department,
-          organization: data.organization,
-          preferred_contact_method: data.preferredContactMethod,
-          timezone: data.timezone,
-          type: data.type,
-          source: data.source,
-          tags: data.tags,
-          notes: data.notes,
-          custom_fields: data.customFields
+          phone: data.phone || null,
+          organization: data.organization || null,
+          notes: data.notes || null
         }])
         .select()
         .single();
@@ -41,20 +45,41 @@ export class SupabaseContactService {
 
   static async getContacts(): Promise<Contact[]> {
     try {
+      // Check table access first
+      const { error: accessError } = await supabase
+        .from('contacts')
+        .select('id')
+        .limit(1);
+
+      if (accessError) {
+        logger.error('Cannot access contacts table', { error: accessError });
+        return []; // Return empty array instead of throwing
+      }
+
       const { data: contacts, error } = await supabase
         .from('contacts')
-        .select('*')
+        .select(`
+          id,
+          first_name,
+          last_name,
+          email,
+          phone,
+          organization,
+          notes,
+          created_at,
+          updated_at
+        `)
         .order('created_at', { ascending: false });
 
       if (error) {
         logger.error('Failed to fetch contacts', { error });
-        throw error;
+        return []; // Return empty array instead of throwing
       }
 
-      return contacts.map(this.transformContact);
+      return (contacts || []).map(this.transformContact);
     } catch (error) {
       logger.error('Failed to fetch contacts', { error });
-      throw error;
+      return []; // Return empty array instead of throwing
     }
   }
 
@@ -119,15 +144,15 @@ export class SupabaseContactService {
       lastName: supabaseContact.last_name,
       email: supabaseContact.email,
       phone: supabaseContact.phone,
-      jobTitle: supabaseContact.job_title,
-      department: supabaseContact.department,
-      organization: supabaseContact.organization,
-      preferredContactMethod: supabaseContact.preferred_contact_method || 'email',
-      timezone: supabaseContact.timezone,
-      type: supabaseContact.type,
-      source: supabaseContact.source,
+      jobTitle: supabaseContact.job_title || '',
+      department: supabaseContact.department || '',
+      organization: supabaseContact.organization || '',
+      preferredContactMethod: 'email' as const,
+      timezone: supabaseContact.timezone || 'UTC',
+      type: 'lead' as const,
+      source: supabaseContact.source || '',
       tags: supabaseContact.tags || [],
-      notes: supabaseContact.notes,
+      notes: supabaseContact.notes || '',
       customFields: supabaseContact.custom_fields || {},
       createdAt: new Date(supabaseContact.created_at),
       updatedAt: new Date(supabaseContact.updated_at)

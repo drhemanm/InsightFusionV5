@@ -23,8 +23,28 @@ export const AddContactModal: React.FC<AddContactModalProps> = ({ isOpen, onClos
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await addContact(formData);
-    onClose();
+    try {
+      await addContact({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        jobTitle: '',
+        department: '',
+        organization: formData.company || '',
+        preferredContactMethod: 'email' as const,
+        timezone: 'UTC',
+        type: 'lead' as const,
+        source: '',
+        tags: formData.tags,
+        notes: '',
+        customFields: {}
+      });
+      onClose();
+    } catch (error) {
+      console.error('Failed to create contact:', error);
+      alert('Failed to create contact. Please check your database configuration.');
+    }
   };
 
   return (
