@@ -7,20 +7,36 @@ export class SupabaseContactService {
     try {
       console.log('🔄 Creating contact with data:', data);
       
-      // Create contact with minimal required fields
+      // Create contact with all available fields
       const { data: contact, error } = await supabase
         .from('contacts')
         .insert([{
           first_name: data.firstName,
           last_name: data.lastName,
           email: data.email,
-          phone: data.phone || null
+          phone: data.phone || null,
+          job_title: data.jobTitle || null,
+          department: data.department || null,
+          organization: data.organization || null,
+          preferred_contact_method: data.preferredContactMethod || 'email',
+          timezone: data.timezone || 'UTC',
+          type: data.type || 'lead',
+          source: data.source || null,
+          tags: data.tags || [],
+          notes: data.notes || null,
+          custom_fields: data.customFields || {}
         }])
         .select()
         .single();
 
       if (error) {
         console.error('❌ Supabase insert error:', error);
+        console.error('❌ Error details:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
         logger.error('Failed to create contact', { error, data });
         throw error;
       }
