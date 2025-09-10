@@ -5,39 +5,31 @@ import type { Contact } from '../../types/contacts';
 export class SupabaseContactService {
   static async createContact(data: Omit<Contact, 'id' | 'createdAt' | 'updatedAt'>): Promise<Contact> {
     try {
-      // First check if contacts table exists
-      const { error: tableError } = await supabase
-        .from('contacts')
-        .select('id')
-        .limit(1);
-
-      if (tableError) {
-        logger.error('Contacts table not accessible', { error: tableError });
-        throw new Error('Database not properly configured. Please run migrations first.');
-      }
-
-      // Create contact with only basic fields that should exist
+      console.log('🔄 Creating contact with data:', data);
+      
+      // Create contact with minimal required fields
       const { data: contact, error } = await supabase
         .from('contacts')
         .insert([{
           first_name: data.firstName,
           last_name: data.lastName,
           email: data.email,
-          phone: data.phone || null,
-          organization: data.organization || null,
-          notes: data.notes || null
+          phone: data.phone || null
         }])
         .select()
         .single();
 
       if (error) {
-        logger.error('Failed to create contact', { error });
+        console.error('❌ Supabase insert error:', error);
+        logger.error('Failed to create contact', { error, data });
         throw error;
       }
 
+      console.log('✅ Contact created in Supabase:', contact);
       logger.info('Contact created successfully', { contactId: contact.id });
       return this.transformContact(contact);
     } catch (error) {
+      console.error('❌ Contact creation exception:', error);
       logger.error('Contact creation failed', { error });
       throw error;
     }
@@ -45,39 +37,31 @@ export class SupabaseContactService {
 
   static async getContacts(): Promise<Contact[]> {
     try {
-      // Check table access first
-      const { error: accessError } = await supabase
-        .from('contacts')
-        .select('id')
-        .limit(1);
+      console.log('🔄 Fetching contacts from Supabase...');
 
-      if (accessError) {
-        logger.error('Cannot access contacts table', { error: accessError });
-        return []; // Return empty array instead of throwing
-      }
-
+      // Try to fetch contacts with minimal fields first
       const { data: contacts, error } = await supabase
         .from('contacts')
-        .select(`
-          id,
-          first_name,
-          last_name,
-          email,
-          phone,
-          organization,
-          notes,
-          created_at,
-          updated_at
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) {
+        console.error('❌ Supabase fetch error:', error);
         logger.error('Failed to fetch contacts', { error });
-        return []; // Return empty array instead of throwing
+        
+        // If it's a table not found error, return empty array
+        if (error.message.includes('relation') || error.message.includes('does not exist')) {
+          console.log('📋 Contacts table does not exist, returning empty array');
+          return [];
+        }
+        
+        throw error;
       }
 
+      console.log('✅ Fetched contacts from Supabase:', contacts?.length || 0);
       return (contacts || []).map(this.transformContact);
     } catch (error) {
+      console.error('❌ Fetch contacts exception:', error);
       logger.error('Failed to fetch contacts', { error });
       return []; // Return empty array instead of throwing
     }
@@ -138,6 +122,8 @@ export class SupabaseContactService {
   }
 
   private static transformContact(supabaseContact: any): Contact {
+    console.log('🔄 Transforming contact:', supabaseContact);
+    
     return {
       id: supabaseContact.id,
       firstName: supabaseContact.first_name,

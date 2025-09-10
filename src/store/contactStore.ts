@@ -35,14 +35,32 @@ export const useContactStore = create<ContactStore>((set, get) => ({
   addContact: async (contactData) => {
     set({ isLoading: true, error: null });
     try {
+      console.log('🔄 Adding contact via store:', contactData);
       const newContact = await SupabaseContactService.createContact(contactData);
+      console.log('✅ Contact added successfully:', newContact);
       set(state => ({
         contacts: [newContact, ...state.contacts],
         isLoading: false
       }));
     } catch (error) {
+      console.error('❌ Store: Failed to add contact:', error);
       logger.error('Failed to add contact', { error });
-      set({ error: 'Failed to add contact', isLoading: false });
+      
+      // Provide more specific error messages
+      let errorMessage = 'Failed to add contact';
+      if (error instanceof Error) {
+        if (error.message.includes('relation') || error.message.includes('does not exist')) {
+          errorMessage = 'Database table not found. Please check your database setup.';
+        } else if (error.message.includes('permission')) {
+          errorMessage = 'Permission denied. Please check your database permissions.';
+        } else if (error.message.includes('duplicate')) {
+          errorMessage = 'A contact with this email already exists.';
+        } else {
+          errorMessage = `Database error: ${error.message}`;
+        }
+      }
+      
+      set({ error: errorMessage, isLoading: false });
       throw error;
     }
   },
