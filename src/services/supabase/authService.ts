@@ -7,21 +7,13 @@ export class SupabaseAuthService {
     try {
       console.log('🔐 Starting Google OAuth...');
       
-      // Use the current domain for redirect URL
-      const redirectUrl = window.location.origin;
+      // Use specific redirect URLs for different environments
+      const isProduction = window.location.hostname === 'insight-fusion-v5.vercel.app';
+      const redirectUrl = isProduction 
+        ? 'https://insight-fusion-v5.vercel.app/dashboard'
+        : 'http://localhost:3000/dashboard';
       
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: redirectUrl,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-            hd: undefined
-          }
-        }
-      });
-
+      console.log('🔗 Using redirect URL:', redirectUrl);
       if (error) {
         console.error('❌ Google OAuth error:', error);
         logger.error('Google sign in failed', { error });
@@ -86,7 +78,7 @@ export class SupabaseAuthService {
         email,
         password,
         options: {
-          data: metadata,
+            hd: undefined // Allow any domain
           emailRedirectTo: `${window.location.origin}/dashboard`
         }
       });
@@ -96,7 +88,7 @@ export class SupabaseAuthService {
         logger.error('Sign up failed', { error });
         return { success: false, error: error.message };
       }
-
+          error: `OAuth failed: ${error.message}. Please check if your Supabase project is active.`
       if (data.user) {
         console.log('✅ Registration successful for:', data.user.email);
         const user = this.transformSupabaseUser(data.user);
@@ -107,7 +99,10 @@ export class SupabaseAuthService {
     } catch (error: any) {
       console.error('❌ Registration exception:', error);
       logger.error('Sign up error', { error });
-      return { success: false, error: error.message };
+      return { 
+        success: false, 
+        error: `Connection failed: ${error.message}. Your Supabase project may be paused or unreachable.`
+      };
     }
   }
 
