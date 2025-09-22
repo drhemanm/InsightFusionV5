@@ -117,17 +117,31 @@ supabase.auth.onAuthStateChange((event, session) => {
 
 // Test connection on initialization
 // Test basic connection without relying on specific tables
-supabase.auth.getSession()
-  .then(({ data, error }) => {
+const testBasicConnection = async () => {
+  try {
+    console.log('🔍 Testing Supabase auth connection...');
+    const { data, error } = await supabase.auth.getSession();
     if (error) {
-      console.error('❌ Supabase auth connection failed:', error.message);
+      console.warn('⚠️ Supabase auth session error:', error.message);
+      console.log('💡 This is normal if you haven\'t logged in yet');
     } else {
       console.log('✅ Supabase auth connection successful');
+      if (data.session) {
+        console.log('👤 Found existing session for:', data.session.user.email);
+      }
     }
-  })
-  .catch((error) => {
-    console.error('❌ Supabase connection error:', error);
-  });
+  } catch (error: any) {
+    console.warn('⚠️ Supabase connection test failed:', error.message);
+    console.log('💡 Possible causes:');
+    console.log('   1. Supabase project is paused (free tier auto-pauses)');
+    console.log('   2. Network connectivity issues');
+    console.log('   3. Invalid project URL or credentials');
+    console.log('🔧 The app will still work - try logging in to wake up the project');
+  }
+};
+
+// Run connection test with delay to not block app startup
+setTimeout(testBasicConnection, 2000);
 
 console.log('🚀 Supabase client initialized');
 logger.info('Supabase client initialized');
