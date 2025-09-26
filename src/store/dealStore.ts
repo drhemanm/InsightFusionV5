@@ -1,21 +1,11 @@
 import { create } from 'zustand';
-import { Deal } from '../types/deals';
-import { db } from '../config/firebase';
-import { 
-  collection, 
-  addDoc, 
-  getDocs, 
-  doc, 
-  updateDoc, 
-  deleteDoc, 
-  query, 
-  where, 
-  orderBy 
-} from 'firebase/firestore';
+import { FirebaseDealService } from '../services/firebase/dealService';
+import { logger } from '../utils/monitoring/logger';
+import type { Deal } from '../types/deals';
 
-interface DealState {
+interface DealStore {
   deals: Deal[];
-  loading: boolean;
+  isLoading: boolean;
   error: string | null;
   fetchDeals: () => Promise<void>;
   addDeal: (deal: Omit<Deal, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
@@ -25,97 +15,66 @@ interface DealState {
   getDealsByAgent: (agentId: string) => Deal[];
 }
 
-export const useDealStore = create<DealState>((set, get) => ({
+export const useDealStore = create<DealStore>((set, get) => ({
   deals: [],
-  loading: false,
+  isLoading: false,
   error: null,
 
   fetchDeals: async () => {
-    set({ loading: true, error: null });
+    set({ isLoading: true, error: null });
     try {
-      const dealsCollection = collection(db, 'deals');
-      const q = query(dealsCollection, orderBy('createdAt', 'desc'));
-      const querySnapshot = await getDocs(q);
-      
-      const deals: Deal[] = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate() || new Date(),
-        updatedAt: doc.data().updatedAt?.toDate() || new Date(),
-      })) as Deal[];
-      
-      set({ deals, loading: false });
+      const deals = await FirebaseDealService.getDeals();
+      set({ deals, isLoading: false });
     } catch (error) {
-      console.error('Error fetching deals:', error);
-      set({ error: 'Failed to fetch deals', loading: false });
+      logger.error('Failed to fetch deals', { error });
+      set({ error: 'Failed to fetch deals', isLoading: false });
     }
   },
 
   addDeal: async (dealData) => {
-    set({ loading: true, error: null });
+    set({ isLoading: true, error: null });
     try {
-      const dealsCollection = collection(db, 'deals');
-      const now = new Date();
-      
-      const newDeal = {
-        ...dealData,
-        createdAt: now,
-        updatedAt: now,
-      };
-      
-      const docRef = await addDoc(dealsCollection, newDeal);
-      
-      const deal: Deal = {
-        id: docRef.id,
-        ...newDeal,
-      };
-      
+      const newDeal = await FirebaseDealService.createDeal(dealData);
       set(state => ({
-        deals: [deal, ...state.deals],
-        loading: false
+        deals: [newDeal, ...state.deals],
+        isLoading: false
       }));
     } catch (error) {
-      console.error('Error adding deal:', error);
-      set({ error: 'Failed to add deal', loading: false });
+      logger.error('Failed to add deal', { error });
+      set({ error: 'Failed to add deal', isLoading: false });
+      throw error;
     }
   },
 
   updateDeal: async (id, updates) => {
-    set({ loading: true, error: null });
+    set({ isLoading: true, error: null });
     try {
-      const dealDoc = doc(db, 'deals', id);
-      const updateData = {
-        ...updates,
-        updatedAt: new Date(),
-      };
-      
-      await updateDoc(dealDoc, updateData);
-      
+      await FirebaseDealService.updateDeal(id, updates);
       set(state => ({
         deals: state.deals.map(deal =>
-          deal.id === id ? { ...deal, ...updateData } : deal
+          deal.id === id ? { ...deal, ...updates } : deal
         ),
-        loading: false
+        isLoading: false
       }));
     } catch (error) {
-      console.error('Error updating deal:', error);
-      set({ error: 'Failed to update deal', loading: false });
+      logger.error('Failed to update deal', { error });
+      set({ error: 'Failed to update deal', isLoading: false });
+      throw error;
     }
   },
 
   deleteDeal: async (id) => {
-    set({ loading: true, error: null });
+    set({ isLoading: true, error: null });
     try {
-      const dealDoc = doc(db, 'deals', id);
-      await deleteDoc(dealDoc);
-      
+      await FirebaseDealService.deleteDeal(id);
       set(state => ({
         deals: state.deals.filter(deal => deal.id !== id),
-        loading: false
+        isLoading: false
       }));
     } catch (error) {
-      console.error('Error deleting deal:', error);
-      set({ error: 'Failed to delete deal', loading: false });
+      logger.error('Failed to delete deal', { error });
+      set({ error: 'Failed to delete deal', isLoading: false });
+      throw error;
     }
   },
 
