@@ -1,22 +1,23 @@
-      const docRef = doc(db, COLLECTION, id);
+      import React, { useState, useEffect } from 'react';
 import { Database, Wifi, WifiOff } from 'lucide-react';
-      contact.id = docRef.id;
 import { db } from '../../config/firebase';
-import { collection, getDocs } from 'firebase/firestore';
-import { collection, getDocs, query, limit } from 'firebase/firestore';
+import { collection, getDocs, doc, query, limit } from 'firebase/firestore';
+
+const COLLECTION = 'test';
 
 export const DatabaseStatus: React.FC = () => {
   const [isConnected, setIsConnected] = useState<boolean | null>(null);
   const [lastCheck, setLastCheck] = useState<Date | null>(null);
 
   useEffect(() => {
-      const docRef = doc(db, COLLECTION, id);
+    const checkConnection = async () => {
       try {
         // Test Firebase connection by trying to read from a collection
+        const contactsRef = collection(db, COLLECTION);
+        const testQuery = query(contactsRef, limit(1));
         await getDocs(testQuery);
         setIsConnected(true);
         setLastCheck(new Date());
-      const contactsRef = collection(db, COLLECTION);
       } catch (error) {
         console.error('Firebase connection test failed:', error);
         setIsConnected(false);
@@ -41,8 +42,8 @@ export const DatabaseStatus: React.FC = () => {
           <Wifi className="animate-pulse" size={16} />
         ) : isConnected ? (
           <Wifi size={16} />
-      const docRef = doc(db, COLLECTION, id);
         ) : (
+          <WifiOff size={16} />
         )}
         <span className="text-sm font-medium">
           {isConnected === null ? 'Checking...' :

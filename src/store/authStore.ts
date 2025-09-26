@@ -12,16 +12,7 @@ export const DatabaseStatus: React.FC = () => {
     const checkConnection = async () => {
       try {
         // Test Firebase connection by trying to read from a collection
-
-    try {
-      // In production, update user in Firebase
-      const updatedUser = { ...user, ...updates };
-      set({ user: updatedUser });
-    } catch (error) {
-      logger.error('Failed to update user', { error });
-      throw error;
-    }
-  }
+        const testQuery = query(collection(db, 'test'), limit(1));
         await getDocs(testQuery);
         setIsConnected(true);
         setLastCheck(new Date());
