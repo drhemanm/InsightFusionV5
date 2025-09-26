@@ -1,57 +1,130 @@
-import React, { useState, useEffect } from 'react';
-import { Database, Wifi, WifiOff } from 'lucide-react';
-import { db } from '../../config/firebase';
-import { collection, getDocs } from 'firebase/firestore';
-import { collection, getDocs } from 'firebase/firestore';
+import React from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { 
+  Brain, 
+  Home, 
+  Users, 
+  DollarSign, 
+  CheckSquare, 
+  MessageSquare, 
+  BarChart3, 
+  Settings, 
+  LogOut,
+  Bell,
+  Search,
+  User
+} from 'lucide-react';
+import { useAuthStore } from '../../store/authStore';
 
-export const DatabaseStatus: React.FC = () => {
-  const [isConnected, setIsConnected] = useState<boolean | null>(null);
-  const [lastCheck, setLastCheck] = useState<Date | null>(null);
+export const Header: React.FC = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuthStore();
 
-  useEffect(() => {
-    const checkConnection = async () => {
-      try {
-        // Test Firebase connection by trying to read from a collection
-        await getDocs(testQuery);
-        setIsConnected(true);
-        setLastCheck(new Date());
-      } catch (error) {
-        console.error('Firebase connection test failed:', error);
-        setIsConnected(false);
-        setLastCheck(new Date());
-      }
-    };
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
 
-    checkConnection();
-    const interval = setInterval(checkConnection, 30000); // Check every 30 seconds
+  const navigation = [
+    { name: 'Dashboard', href: '/dashboard', icon: Home },
+    { name: 'Contacts', href: '/contacts', icon: Users },
+    { name: 'Deals', href: '/deals', icon: DollarSign },
+    { name: 'Tasks', href: '/tasks', icon: CheckSquare },
+    { name: 'Messages', href: '/messages', icon: MessageSquare },
+    { name: 'Analytics', href: '/analytics', icon: BarChart3 },
+  ];
 
-    return () => clearInterval(interval);
-  }, []);
+  const isActive = (href: string) => location.pathname === href;
 
   return (
-    <div className="fixed bottom-4 left-4 z-50">
-      <div className={`flex items-center gap-2 px-3 py-2 rounded-lg shadow-lg ${
-        isConnected === null ? 'bg-gray-100 text-gray-600' :
-        isConnected ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-      }`}>
-        <Database size={16} />
-        {isConnected === null ? (
-          <Wifi className="animate-pulse" size={16} />
-        ) : isConnected ? (
-          <Wifi size={16} />
-        ) : (
-          <WifiOff size={16} />
-        )}
-        <span className="text-sm font-medium">
-          {isConnected === null ? 'Checking...' :
-           isConnected ? 'DB Connected' : 'DB Disconnected'}
-        </span>
-        {lastCheck && (
-          <span className="text-xs opacity-75">
-            {lastCheck.toLocaleTimeString()}
-          </span>
-        )}
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo */}
+          <Link to="/dashboard" className="flex items-center gap-3">
+            <div className="p-2 bg-blue-600 rounded-lg">
+              <Brain className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">InsightFusion</h1>
+              <p className="text-xs text-gray-500">AI-Powered CRM</p>
+            </div>
+          </Link>
+
+          {/* Navigation */}
+          <nav className="hidden md:flex items-center gap-1">
+            {navigation.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    isActive(item.href)
+                      ? 'bg-blue-50 text-blue-600'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  }`}
+                >
+                  <Icon size={18} />
+                  <span>{item.name}</span>
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Right Side */}
+          <div className="flex items-center gap-4">
+            {/* Search */}
+            <div className="hidden lg:block relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+              <input
+                type="text"
+                placeholder="Search..."
+                className="pl-10 pr-4 py-2 w-64 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Notifications */}
+            <button className="relative p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-50">
+              <Bell size={20} />
+              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+            </button>
+
+            {/* User Menu */}
+            <div className="flex items-center gap-3">
+              <div className="hidden sm:block text-right">
+                <p className="text-sm font-medium text-gray-900">
+                  {user?.firstName} {user?.lastName}
+                </p>
+                <p className="text-xs text-gray-500">{user?.email}</p>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Link
+                  to="/settings"
+                  className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-50"
+                  title="Settings"
+                >
+                  <Settings size={20} />
+                </Link>
+                
+                <button
+                  onClick={handleLogout}
+                  className="p-2 text-gray-400 hover:text-red-600 rounded-lg hover:bg-gray-50"
+                  title="Logout"
+                >
+                  <LogOut size={20} />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </header>
   );
 };

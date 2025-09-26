@@ -1,130 +1,57 @@
-import { create } from 'zustand';
-import { FirebaseDealService } from '../services/firebase/dealService';
-import { logger } from '../utils/monitoring/logger';
-import type { Deal } from '../types/deals';
+import React, { useState, useEffect } from 'react';
+import { Database, Wifi, WifiOff } from 'lucide-react';
+import { db } from '../../config/firebase';
+import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 
-interface DealStore {
-  deals: Deal[];
-  isLoading: boolean;
-  error: string | null;
-  fetchDeals: () => Promise<void>;
-  addDeal: (deal: Omit<Deal, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Deal>;
-  updateDeal: (id: string, updates: Partial<Deal>) => Promise<void>;
-  deleteDeal: (id: string) => Promise<void>;
-  filterByStage: (stage: Deal['stage']) => Promise<void>;
-  filterByAssignee: (userId: string) => Promise<void>;
-}
+export const DatabaseStatus: React.FC = () => {
+  const [isConnected, setIsConnected] = useState<boolean | null>(null);
+  const [lastCheck, setLastCheck] = useState<Date | null>(null);
 
-export const useDealStore = create<DealStore>((set) => ({
-  deals: [],
-  isLoading: false,
-  error: null,
+  useEffect(() => {
+    const checkConnection = async () => {
+      try {
+        // Test Firebase connection by trying to read from a collection
+        await getDocs(testQuery);
+        setIsConnected(true);
+        setLastCheck(new Date());
+      } catch (error) {
+        console.error('Firebase connection test failed:', error);
+        setIsConnected(false);
+        setLastCheck(new Date());
+      }
+    };
 
-  fetchDeals: async () => {
-    set({ isLoading: true, error: null });
-    try {
-      const deals = await FirebaseDealService.getDeals();
-      set({ deals, isLoading: false });
-    } catch (error) {
-      logger.error('Failed to fetch deals', { error });
-      set({ error: 'Failed to fetch deals', isLoading: false });
-    }
-  },
+    checkConnection();
+    const interval = setInterval(checkConnection, 30000); // Check every 30 seconds
 
-  addDeal: async (dealData) => {
-    set({ isLoading: true, error: null });
-    try {
-      const newDeal = await FirebaseDealService.createDeal(dealData);
-      set(state => ({
-        deals: [newDeal, ...state.deals],
-        isLoading: false
-      }));
-      return newDeal;
-    } catch (error) {
-      logger.error('Failed to add deal', { error });
-      set({ error: 'Failed to add deal', isLoading: false });
-      throw error;
-    }
-  },
+    return () => clearInterval(interval);
+  }, []);
 
-  updateDeal: async (id, updates) => {
-    set({ isLoading: true, error: null });
-    try {
-      await FirebaseDealService.updateDeal(id, updates);
-      set(state => ({
-        deals: state.deals.map(deal =>
-          deal.id === id ? { ...deal, ...updates } : deal
-        ),
-        isLoading: false
-      }));
-    } catch (error) {
-      logger.error('Failed to update deal', { error });
-      set({ error: 'Failed to update deal', isLoading: false });
-      throw error;
-    }
-  },
-
-  deleteDeal: async (id) => {
-    set({ isLoading: true, error: null });
-    try {
-      await FirebaseDealService.deleteDeal(id);
-      set(state => ({
-        deals: state.deals.filter(deal => deal.id !== id),
-        isLoading: false
-      }));
-    } catch (error) {
-      logger.error('Failed to delete deal', { error });
-      set({ error: 'Failed to delete deal', isLoading: false });
-      throw error;
-    }
-  },
-
-  filterByStage: async (stage) => {
-    set({ isLoading: true, error: null });
-    try {
-      const q = query(dealsRef, where('stage', '==', stage), orderBy('createdAt', 'desc'));
-      const snapshot = await getDocs(q);
-      
-      const deals = snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          ...data,
-          id: doc.id,
-          createdAt: new Date(data.createdAt),
-          updatedAt: new Date(data.updatedAt),
-          expectedCloseDate: data.expectedCloseDate ? new Date(data.expectedCloseDate) : undefined,
-          actualCloseDate: data.actualCloseDate ? new Date(data.actualCloseDate) : undefined
-        } as Deal;
-      });
-
-      set({ deals, isLoading: false });
-    } catch (error) {
-      logger.error('Failed to filter deals by stage', { error });
-      set({ error: 'Failed to filter deals', isLoading: false });
-    }
-  },
-
-  filterByAssignee: async (userId) => {
-    set({ isLoading: true, error: null });
-    try {
-      const q = query(dealsRef, where('assignedTo', '==', userId), orderBy('createdAt', 'desc'));
-      const snapshot = await getDocs(q);
-      
-      const deals = snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          ...data,
-          id: doc.id,
-          createdAt: new Date(data.createdAt),
-          updatedAt: new Date(data.updatedAt),
-          expectedCloseDate: data.expectedCloseDate ? new Date(data.expectedCloseDate) : undefined,
-          actualCloseDate: data.actualCloseDate ? new Date(data.actualCloseDate) : undefined
-        } as Deal;
-      });
-      set({ deals, isLoading: false });
-    } catch (error) {
-      logger.error('Failed to filter deals by assignee', { error });
-      set({ error: 'Failed to filter deals', isLoading: false });
-    }
-  }
-}));
+  return (
+    <div className="fixed bottom-4 left-4 z-50">
+      <div className={`flex items-center gap-2 px-3 py-2 rounded-lg shadow-lg ${
+        isConnected === null ? 'bg-gray-100 text-gray-600' :
+        isConnected ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+      }`}>
+        <Database size={16} />
+        {isConnected === null ? (
+          <Wifi className="animate-pulse" size={16} />
+        ) : isConnected ? (
+          <Wifi size={16} />
+        ) : (
+          <WifiOff size={16} />
+        )}
+        <span className="text-sm font-medium">
+          {isConnected === null ? 'Checking...' :
+           isConnected ? 'DB Connected' : 'DB Disconnected'}
+        </span>
+        {lastCheck && (
+          <span className="text-xs opacity-75">
+            {lastCheck.toLocaleTimeString()}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+};
