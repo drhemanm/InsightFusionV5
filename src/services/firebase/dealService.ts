@@ -1,104 +1,57 @@
-import { 
-  collection, 
-  doc, 
-  setDoc, 
-  getDoc, 
-  getDocs, 
-  updateDoc, 
-  deleteDoc, 
-  query, 
-  orderBy, 
-  where 
-} from 'firebase/firestore';
+import React, { useState, useEffect } from 'react';
+import { Database, Wifi, WifiOff } from 'lucide-react';
 import { db } from '../../config/firebase';
-import { logger } from '../../utils/monitoring/logger';
-import type { Deal } from '../../types/deals';
+import { collection, getDocs, query, limit } from 'firebase/firestore';
 
-const COLLECTION = 'deals';
-const dealsRef = collection(db, COLLECTION);
+export const DatabaseStatus: React.FC = () => {
+  const [isConnected, setIsConnected] = useState<boolean | null>(null);
+  const [lastCheck, setLastCheck] = useState<Date | null>(null);
 
-export class FirebaseDealService {
-  static async createDeal(data: Omit<Deal, 'id' | 'createdAt' | 'updatedAt'>): Promise<Deal> {
-    try {
-      const docRef = doc(dealsRef);
-      const deal: Deal = {
-        ...data,
-        id: docRef.id,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
-
-      await setDoc(docRef, {
-        ...deal,
-        createdAt: deal.createdAt.toISOString(),
-        updatedAt: deal.updatedAt.toISOString(),
-        expectedCloseDate: deal.expectedCloseDate?.toISOString(),
-        actualCloseDate: deal.actualCloseDate?.toISOString()
-      });
-
-      logger.info('Deal created successfully', { dealId: deal.id });
-      return deal;
-    } catch (error) {
-      logger.error('Deal creation failed', { error });
-      throw error;
-    }
-  }
-
-  static async getDeals(): Promise<Deal[]> {
-    try {
-      const q = query(dealsRef, orderBy('createdAt', 'desc'));
-      const snapshot = await getDocs(q);
-      
-      const deals = snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          ...data,
-          id: doc.id,
-          createdAt: new Date(data.createdAt),
-          updatedAt: new Date(data.updatedAt),
-          expectedCloseDate: data.expectedCloseDate ? new Date(data.expectedCloseDate) : undefined,
-          actualCloseDate: data.actualCloseDate ? new Date(data.actualCloseDate) : undefined
-        } as Deal;
-      });
-
-      return deals;
-    } catch (error) {
-      logger.error('Failed to fetch deals', { error });
-      throw error;
-    }
-  }
-
-  static async updateDeal(id: string, updates: Partial<Deal>): Promise<void> {
-    try {
-      const docRef = doc(dealsRef, id);
-      const updateData = {
-        ...updates,
-        updatedAt: new Date().toISOString()
-      };
-
-      if (updates.expectedCloseDate) {
-        updateData.expectedCloseDate = updates.expectedCloseDate.toISOString();
+  useEffect(() => {
+    const checkConnection = async () => {
+      try {
+        // Test Firebase connection by trying to read from a collection
+        const testQuery = query(collection(db, 'contacts'), limit(1));
+        await getDocs(testQuery);
+        setIsConnected(true);
+        setLastCheck(new Date());
+      } catch (error) {
+        console.error('Firebase connection test failed:', error);
+        setIsConnected(false);
+        setLastCheck(new Date());
       }
-      if (updates.actualCloseDate) {
-        updateData.actualCloseDate = updates.actualCloseDate.toISOString();
-      }
+    };
 
-      await updateDoc(docRef, updateData);
-      logger.info('Deal updated successfully', { dealId: id });
-    } catch (error) {
-      logger.error('Deal update failed', { error, dealId: id });
-      throw error;
-    }
-  }
+    checkConnection();
+    const interval = setInterval(checkConnection, 30000); // Check every 30 seconds
 
-  static async deleteDeal(id: string): Promise<void> {
-    try {
-      const docRef = doc(dealsRef, id);
-      await deleteDoc(docRef);
-      logger.info('Deal deleted successfully', { dealId: id });
-    } catch (error) {
-      logger.error('Deal deletion failed', { error, dealId: id });
-      throw error;
-    }
-  }
-}
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="fixed bottom-4 left-4 z-50">
+      <div className={`flex items-center gap-2 px-3 py-2 rounded-lg shadow-lg ${
+        isConnected === null ? 'bg-gray-100 text-gray-600' :
+        isConnected ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+      }`}>
+        <Database size={16} />
+        {isConnected === null ? (
+          <Wifi className="animate-pulse" size={16} />
+        ) : isConnected ? (
+          <Wifi size={16} />
+        ) : (
+          <WifiOff size={16} />
+        )}
+        <span className="text-sm font-medium">
+          {isConnected === null ? 'Checking...' :
+           isConnected ? 'DB Connected' : 'DB Disconnected'}
+        </span>
+        {lastCheck && (
+          <span className="text-xs opacity-75">
+            {lastCheck.toLocaleTimeString()}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+};
