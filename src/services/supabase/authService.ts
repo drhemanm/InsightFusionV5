@@ -7,15 +7,10 @@ export class SupabaseAuthService {
     try {
       console.log('🔐 Starting Google OAuth...');
       
-      // Use the current origin for redirect
-      const redirectUrl = `${window.location.origin}/dashboard`;
-      
-      console.log('🔗 Using redirect URL:', redirectUrl);
-      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: redirectUrl
+          redirectTo: `${window.location.origin}/dashboard`
         }
       });
 
