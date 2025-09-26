@@ -7,11 +7,8 @@ export class SupabaseAuthService {
     try {
       console.log('🔐 Starting Google OAuth...');
       
-      // Use specific redirect URLs for different environments
-      const isProduction = window.location.hostname === 'insight-fusion-v5.vercel.app';
-      const redirectUrl = isProduction 
-        ? 'https://insight-fusion-v5.vercel.app/dashboard'
-        : 'http://localhost:3000/dashboard';
+      // Use the current origin for redirect
+      const redirectUrl = `${window.location.origin}/dashboard`;
       
       console.log('🔗 Using redirect URL:', redirectUrl);
       
