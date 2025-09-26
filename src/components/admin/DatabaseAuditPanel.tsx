@@ -13,6 +13,11 @@ export const DatabaseStatus: React.FC = () => {
       try {
         // Test Firebase connection by trying to read from a collection
         await getDocs(testQuery);
+      }
+    }
+  }
+  )
+}
 // Database audit panel utilities will be implemented here
 export const DatabaseAuditPanel = {
   // Placeholder for future audit functionality

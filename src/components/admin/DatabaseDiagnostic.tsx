@@ -12,6 +12,11 @@ export const DatabaseStatus: React.FC = () => {
     const checkConnection = async () => {
       try {
         // Test Firebase connection by trying to read from a collection
+      }
+    }
+  }
+  )
+}
 // Database diagnostic utilities will be implemented here
 export const DatabaseDiagnostic = {
   // Placeholder for future diagnostic functionality
