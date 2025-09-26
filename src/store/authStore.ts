@@ -1,6 +1,5 @@
 import { create } from 'zustand';
-import { supabase } from '../config/supabase';
-import { SupabaseAuthService } from '../services/supabase/authService';
+import { FirebaseAuthService } from '../services/firebase/authService';
 import { logger } from '../utils/monitoring/logger';
 import type { User } from '../types/auth';
 
@@ -29,27 +28,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       console.log('🚀 Initiating Google OAuth flow...');
       
-      // Test Supabase connection first
-      try {
-        const { error: connectionError } = await supabase.from('users').select('count', { count: 'exact', head: true });
-        if (connectionError) {
-          throw new Error(`Supabase connection failed: ${connectionError.message}`);
-        }
-      } catch (connectionError: any) {
-        console.error('❌ Supabase connection test failed:', connectionError);
-        set({ 
-          error: 'Unable to connect to authentication service. Please check your internet connection or try again later.',
-          isLoading: false 
-        });
-        return { success: false };
-      }
-      
-      const result = await SupabaseAuthService.signInWithGoogle();
+      const result = await FirebaseAuthService.signInWithGoogle();
       
       if (result.success) {
         console.log('✅ Google OAuth flow started successfully');
-        // Don't set loading to false here - let the auth state change handle it
-        return { success: true, redirected: true };
+        if (result.user) {
+          set({ 
+            user: result.user,
+            isAuthenticated: true,
+            isLoading: false 
+          });
+        }
+        return { success: true };
       } else {
         console.error('❌ Google OAuth failed:', result.error);
         set({ 
@@ -74,7 +64,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       console.log('🔐 Starting email authentication for:', email);
       
-      const result = await SupabaseAuthService.signInWithEmail(email, password);
+      const result = await FirebaseAuthService.signInWithEmail(email, password);
       
       if (result.success && result.user) {
         console.log('✅ Email authentication successful:', result.user.email);
@@ -108,7 +98,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       console.log('📝 Starting user registration for:', email);
       
-      const result = await SupabaseAuthService.signUp(email, password, {
+      const result = await FirebaseAuthService.signUp(email, password, {
         firstName,
         lastName,
         role: 'user'
@@ -151,7 +141,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading: true });
     try {
       console.log('🚪 Logging out user...');
-      await SupabaseAuthService.signOut();
+      await FirebaseAuthService.signOut();
       set({ 
         user: null, 
         isAuthenticated: false,

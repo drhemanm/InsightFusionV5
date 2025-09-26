@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { SupabaseDealService } from '../services/supabase/dealService';
+import { FirebaseDealService } from '../services/firebase/dealService';
 import { logger } from '../utils/monitoring/logger';
 import type { Deal } from '../types/deals';
 
@@ -23,7 +23,7 @@ export const useDealStore = create<DealStore>((set) => ({
   fetchDeals: async () => {
     set({ isLoading: true, error: null });
     try {
-      const deals = await SupabaseDealService.getDeals();
+      const deals = await FirebaseDealService.getDeals();
       set({ deals, isLoading: false });
     } catch (error) {
       logger.error('Failed to fetch deals', { error });
@@ -34,7 +34,7 @@ export const useDealStore = create<DealStore>((set) => ({
   addDeal: async (dealData) => {
     set({ isLoading: true, error: null });
     try {
-      const newDeal = await SupabaseDealService.createDeal(dealData);
+      const newDeal = await FirebaseDealService.createDeal(dealData);
       set(state => ({
         deals: [newDeal, ...state.deals],
         isLoading: false
@@ -50,7 +50,7 @@ export const useDealStore = create<DealStore>((set) => ({
   updateDeal: async (id, updates) => {
     set({ isLoading: true, error: null });
     try {
-      await SupabaseDealService.updateDeal(id, updates);
+      await FirebaseDealService.updateDeal(id, updates);
       set(state => ({
         deals: state.deals.map(deal =>
           deal.id === id ? { ...deal, ...updates } : deal
@@ -67,7 +67,7 @@ export const useDealStore = create<DealStore>((set) => ({
   deleteDeal: async (id) => {
     set({ isLoading: true, error: null });
     try {
-      await SupabaseDealService.deleteDeal(id);
+      await FirebaseDealService.deleteDeal(id);
       set(state => ({
         deals: state.deals.filter(deal => deal.id !== id),
         isLoading: false
@@ -82,18 +82,22 @@ export const useDealStore = create<DealStore>((set) => ({
   filterByStage: async (stage) => {
     set({ isLoading: true, error: null });
     try {
-      const { data: deals, error } = await supabase
-        .from('deals')
-        .select('*')
-        .eq('stage', stage)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      set({ 
-        deals: deals.map((deal: any) => SupabaseDealService.transformDeal(deal)), 
-        isLoading: false 
+      const q = query(dealsRef, where('stage', '==', stage), orderBy('createdAt', 'desc'));
+      const snapshot = await getDocs(q);
+      
+      const deals = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          ...data,
+          id: doc.id,
+          createdAt: new Date(data.createdAt),
+          updatedAt: new Date(data.updatedAt),
+          expectedCloseDate: data.expectedCloseDate ? new Date(data.expectedCloseDate) : undefined,
+          actualCloseDate: data.actualCloseDate ? new Date(data.actualCloseDate) : undefined
+        } as Deal;
       });
+
+      set({ deals, isLoading: false });
     } catch (error) {
       logger.error('Failed to filter deals by stage', { error });
       set({ error: 'Failed to filter deals', isLoading: false });
@@ -103,18 +107,21 @@ export const useDealStore = create<DealStore>((set) => ({
   filterByAssignee: async (userId) => {
     set({ isLoading: true, error: null });
     try {
-      const { data: deals, error } = await supabase
-        .from('deals')
-        .select('*')
-        .eq('assigned_to', userId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      set({ 
-        deals: deals.map((deal: any) => SupabaseDealService.transformDeal(deal)), 
-        isLoading: false 
+      const q = query(dealsRef, where('assignedTo', '==', userId), orderBy('createdAt', 'desc'));
+      const snapshot = await getDocs(q);
+      
+      const deals = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          ...data,
+          id: doc.id,
+          createdAt: new Date(data.createdAt),
+          updatedAt: new Date(data.updatedAt),
+          expectedCloseDate: data.expectedCloseDate ? new Date(data.expectedCloseDate) : undefined,
+          actualCloseDate: data.actualCloseDate ? new Date(data.actualCloseDate) : undefined
+        } as Deal;
       });
+      set({ deals, isLoading: false });
     } catch (error) {
       logger.error('Failed to filter deals by assignee', { error });
       set({ error: 'Failed to filter deals', isLoading: false });

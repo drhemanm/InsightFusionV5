@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { SupabaseTicketService } from '../services/supabase/ticketService';
+import { FirebaseTicketService } from '../services/firebase/ticketService';
 import { logger } from '../utils/monitoring/logger';
 import type { Ticket } from '../types/tickets';
 
@@ -22,7 +22,7 @@ export const useTicketStore = create<TicketStore>((set) => ({
   fetchTickets: async () => {
     set({ isLoading: true, error: null });
     try {
-      const tickets = await SupabaseTicketService.getTickets();
+      const tickets = await FirebaseTicketService.getTickets();
       set({ tickets, isLoading: false });
     } catch (error) {
       logger.error('Failed to fetch tickets', { error });
@@ -33,7 +33,7 @@ export const useTicketStore = create<TicketStore>((set) => ({
   createTicket: async (ticketData) => {
     set({ isLoading: true, error: null });
     try {
-      const ticket = await SupabaseTicketService.createTicket(ticketData);
+      const ticket = await FirebaseTicketService.createTicket(ticketData);
       set(state => ({
         tickets: [ticket, ...state.tickets],
         isLoading: false
@@ -49,7 +49,7 @@ export const useTicketStore = create<TicketStore>((set) => ({
   updateTicket: async (id, updates) => {
     set({ isLoading: true, error: null });
     try {
-      await SupabaseTicketService.updateTicket(id, updates);
+      await FirebaseTicketService.updateTicket(id, updates);
       set(state => ({
         tickets: state.tickets.map(ticket =>
           ticket.id === id ? { ...ticket, ...updates } : ticket
@@ -66,13 +66,7 @@ export const useTicketStore = create<TicketStore>((set) => ({
   deleteTicket: async (id) => {
     set({ isLoading: true, error: null });
     try {
-      const { error } = await supabase
-        .from('tickets')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
+      await FirebaseTicketService.deleteTicket(id);
       set(state => ({
         tickets: state.tickets.filter(ticket => ticket.id !== id),
         isLoading: false
@@ -87,22 +81,17 @@ export const useTicketStore = create<TicketStore>((set) => ({
   filterTickets: async (filters) => {
     set({ isLoading: true, error: null });
     try {
-      let query = supabase.from('tickets').select('*');
-
-      Object.entries(filters).forEach(([field, value]) => {
-        if (value) {
-          query = query.eq(field, value);
-        }
+      // For now, just fetch all tickets and filter client-side
+      // In production, you'd implement proper Firestore queries
+      const allTickets = await FirebaseTicketService.getTickets();
+      const filteredTickets = allTickets.filter(ticket => {
+        return Object.entries(filters).every(([field, value]) => {
+          if (!value) return true;
+          return ticket[field as keyof Ticket] === value;
+        });
       });
 
-      const { data: tickets, error } = await query.order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      set({ 
-        tickets: tickets.map((ticket: any) => SupabaseTicketService.transformTicket(ticket)), 
-        isLoading: false 
-      });
+      set({ tickets: filteredTickets, isLoading: false });
     } catch (error) {
       logger.error('Failed to filter tickets', { error });
       set({ error: 'Failed to filter tickets', isLoading: false });

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { SupabaseContactService } from '../services/supabase/contactService';
+import { FirebaseContactService } from '../services/firebase/contactService';
 import { logger } from '../utils/monitoring/logger';
 import type { Contact } from '../types/contacts';
 
@@ -24,7 +24,7 @@ export const useContactStore = create<ContactStore>((set, get) => ({
   fetchContacts: async () => {
     set({ isLoading: true, error: null });
     try {
-      const contacts = await SupabaseContactService.getContacts();
+      const contacts = await FirebaseContactService.getContacts();
       set({ contacts, isLoading: false });
     } catch (error) {
       logger.error('Failed to fetch contacts', { error });
@@ -36,7 +36,7 @@ export const useContactStore = create<ContactStore>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       console.log('🔄 Adding contact via store:', contactData);
-      const newContact = await SupabaseContactService.createContact(contactData);
+      const newContact = await FirebaseContactService.createContact(contactData);
       console.log('✅ Contact added successfully:', newContact);
       set(state => ({
         contacts: [newContact, ...state.contacts],
@@ -68,7 +68,7 @@ export const useContactStore = create<ContactStore>((set, get) => ({
   updateContact: async (id, updates) => {
     set({ isLoading: true, error: null });
     try {
-      await SupabaseContactService.updateContact(id, updates);
+      await FirebaseContactService.updateContact(id, updates);
       set(state => ({
         contacts: state.contacts.map(contact =>
           contact.id === id ? { ...contact, ...updates } : contact
@@ -85,7 +85,7 @@ export const useContactStore = create<ContactStore>((set, get) => ({
   deleteContact: async (id) => {
     set({ isLoading: true, error: null });
     try {
-      await SupabaseContactService.deleteContact(id);
+      await FirebaseContactService.deleteContact(id);
       set(state => ({
         contacts: state.contacts.filter(contact => contact.id !== id),
         isLoading: false

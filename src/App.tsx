@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { supabase } from './config/supabase';
+import { FirebaseAuthService } from './services/firebase/authService';
 import { useAuthStore } from './store/authStore';
 import { Header } from './components/layout/Header';
 import { LoginForm } from './components/auth/LoginForm';
@@ -36,59 +36,18 @@ const App: React.FC = () => {
   // Initialize auth state and listen for changes
   useEffect(() => {
     let mounted = true;
-    let timeoutId: NodeJS.Timeout;
 
-    // Check for existing session on app load
     const initializeAuth = async () => {
       try {
         console.log('🔄 Initializing auth...');
         
-        // Set a timeout to prevent infinite loading
-        timeoutId = setTimeout(() => {
-          if (mounted) {
-            console.log('⏰ Auth initialization timeout, setting loading to false');
-            setLoading(false);
-          }
-        }, 10000); // 10 second timeout
-
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (!mounted) return;
-        
-        if (error) {
-          console.error('❌ Error getting session:', error);
-          setLoading(false);
-          return;
-        }
-
-        if (session?.user) {
-          console.log('✅ Found existing session for:', session.user.email);
-          const user = {
-            id: session.user.id,
-            email: session.user.email!,
-            firstName: session.user.user_metadata?.first_name || 
-                      session.user.user_metadata?.firstName || 
-                      session.user.user_metadata?.given_name ||
-                      session.user.user_metadata?.name?.split(' ')[0] ||
-                      session.user.email?.split('@')[0] || 'User',
-            lastName: session.user.user_metadata?.last_name || 
-                     session.user.user_metadata?.lastName || 
-                     session.user.user_metadata?.family_name ||
-                     session.user.user_metadata?.name?.split(' ').slice(1).join(' ') || '',
-            role: 'user' as const,
-            organizationId: 'default',
-            isEmailVerified: session.user.email_confirmed_at !== null,
-            twoFactorEnabled: false
-          };
+        const user = await FirebaseAuthService.getCurrentUser();
+        if (user) {
+          console.log('✅ Found existing user session:', user.email);
           setUser(user);
         } else {
-          console.log('ℹ️ No existing session found');
+          console.log('ℹ️ No existing user session found');
           setLoading(false);
-        }
-        
-        // Clear timeout if we got here successfully
-        if (timeoutId) {
-          clearTimeout(timeoutId);
         }
       } catch (error) {
         console.error('❌ Error initializing auth:', error);
@@ -100,62 +59,41 @@ const App: React.FC = () => {
 
     initializeAuth();
 
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (!mounted) return;
-        
-        console.log('🔐 Auth state change:', event, session?.user?.email);
-        
-        if (event === 'SIGNED_IN' && session?.user) {
-          console.log('✅ User signed in:', session.user.email);
-          console.log('👤 User metadata:', session.user.user_metadata);
-          
-          const user = {
-            id: session.user.id,
-            email: session.user.email!,
-            firstName: session.user.user_metadata?.first_name || 
-                      session.user.user_metadata?.firstName || 
-                      session.user.user_metadata?.given_name ||
-                      session.user.user_metadata?.name?.split(' ')[0] ||
-                      session.user.email?.split('@')[0] || 'User',
-            lastName: session.user.user_metadata?.last_name || 
-                     session.user.user_metadata?.lastName || 
-                     session.user.user_metadata?.family_name ||
-                     session.user.user_metadata?.name?.split(' ').slice(1).join(' ') || '',
-            role: 'user' as const,
-            organizationId: 'default',
-            isEmailVerified: session.user.email_confirmed_at !== null,
-            twoFactorEnabled: false
-          };
-          
-          console.log('🔄 Setting user in store:', user);
-          setUser(user);
-        } else if (event === 'SIGNED_OUT') {
-          console.log('🚪 User signed out');
-          clearUser();
-        } else if (event === 'INITIAL_SESSION') {
-          console.log('🔄 Initial session check completed');
-          // If no session found, stop loading
-          if (!session) {
-            setLoading(false);
-          }
-        } else if (event === 'TOKEN_REFRESHED') {
-          console.log('🔄 Token refreshed');
-        } else {
-          console.log('ℹ️ Auth event:', event);
-        }
+    // Listen for Firebase auth state changes
+    const unsubscribe = FirebaseAuthService.onAuthStateChanged((user) => {
+      if (!mounted) return;
+      
+      if (user) {
+        console.log('✅ Firebase user signed in:', user.email);
+        setUser(user);
+      } else {
+        console.log('🚪 Firebase user signed out');
+        clearUser();
       }
-    );
+    });
 
     return () => {
       mounted = false;
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-      subscription.unsubscribe();
+      unsubscribe();
     };
-  }, [setUser, clearUser]);
+  }, [setUser, clearUser, setLoading]);
+
+  // Set up auth state listener separately to avoid dependency issues
+  useEffect(() => {
+    const unsubscribe = FirebaseAuthService.onAuthStateChanged((user) => {
+      if (user) {
+        console.log('🔐 Auth state change: User signed in');
+        setUser(user);
+      } else {
+        console.log('🔐 Auth state change: User signed out');
+        if (isAuthenticated) {
+          clearUser();
+        }
+      }
+    });
+
+    return unsubscribe;
+  }, [setUser, clearUser, isAuthenticated]);
 
   // Show loading state while checking authentication
   if (isLoading) {
