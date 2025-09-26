@@ -1,57 +1,117 @@
-import React, { useState, useEffect } from 'react';
-import { Database, Wifi, WifiOff } from 'lucide-react';
+import { 
+  collection, 
+  addDoc, 
+  getDocs, 
+  doc, 
+  updateDoc, 
+  deleteDoc, 
+  query, 
+  where, 
+  orderBy, 
+  Timestamp 
+} from 'firebase/firestore';
 import { db } from '../../config/firebase';
-import { collection, getDocs, query, limit } from 'firebase/firestore';
+import { Ticket, TicketStatus, TicketPriority } from '../../types/tickets';
 
-export const DatabaseStatus: React.FC = () => {
-  const [isConnected, setIsConnected] = useState<boolean | null>(null);
-  const [lastCheck, setLastCheck] = useState<Date | null>(null);
+export const ticketService = {
+  // Create a new ticket
+  async createTicket(ticketData: Omit<Ticket, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
+    try {
+      const docRef = await addDoc(collection(db, 'tickets'), {
+        ...ticketData,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now()
+      });
+      return docRef.id;
+    } catch (error) {
+      console.error('Error creating ticket:', error);
+      throw error;
+    }
+  },
 
-  useEffect(() => {
-    const checkConnection = async () => {
-      try {
-        // Test Firebase connection by trying to read from a collection
-        const testQuery = query(collection(db, 'contacts'), limit(1));
-        await getDocs(testQuery);
-        setIsConnected(true);
-        setLastCheck(new Date());
-      } catch (error) {
-        console.error('Firebase connection test failed:', error);
-        setIsConnected(false);
-        setLastCheck(new Date());
-      }
-    };
+  // Get all tickets
+  async getTickets(): Promise<Ticket[]> {
+    try {
+      const querySnapshot = await getDocs(
+        query(collection(db, 'tickets'), orderBy('createdAt', 'desc'))
+      );
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+        updatedAt: doc.data().updatedAt?.toDate() || new Date()
+      })) as Ticket[];
+    } catch (error) {
+      console.error('Error fetching tickets:', error);
+      throw error;
+    }
+  },
 
-    checkConnection();
-    const interval = setInterval(checkConnection, 30000); // Check every 30 seconds
+  // Get tickets by status
+  async getTicketsByStatus(status: TicketStatus): Promise<Ticket[]> {
+    try {
+      const querySnapshot = await getDocs(
+        query(
+          collection(db, 'tickets'), 
+          where('status', '==', status),
+          orderBy('createdAt', 'desc')
+        )
+      );
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+        updatedAt: doc.data().updatedAt?.toDate() || new Date()
+      })) as Ticket[];
+    } catch (error) {
+      console.error('Error fetching tickets by status:', error);
+      throw error;
+    }
+  },
 
-    return () => clearInterval(interval);
-  }, []);
+  // Update ticket
+  async updateTicket(ticketId: string, updates: Partial<Ticket>): Promise<void> {
+    try {
+      const ticketRef = doc(db, 'tickets', ticketId);
+      await updateDoc(ticketRef, {
+        ...updates,
+        updatedAt: Timestamp.now()
+      });
+    } catch (error) {
+      console.error('Error updating ticket:', error);
+      throw error;
+    }
+  },
 
-  return (
-    <div className="fixed bottom-4 left-4 z-50">
-      <div className={`flex items-center gap-2 px-3 py-2 rounded-lg shadow-lg ${
-        isConnected === null ? 'bg-gray-100 text-gray-600' :
-        isConnected ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-      }`}>
-        <Database size={16} />
-        {isConnected === null ? (
-          <Wifi className="animate-pulse" size={16} />
-        ) : isConnected ? (
-          <Wifi size={16} />
-        ) : (
-          <WifiOff size={16} />
-        )}
-        <span className="text-sm font-medium">
-          {isConnected === null ? 'Checking...' :
-           isConnected ? 'DB Connected' : 'DB Disconnected'}
-        </span>
-        {lastCheck && (
-          <span className="text-xs opacity-75">
-            {lastCheck.toLocaleTimeString()}
-          </span>
-        )}
-      </div>
-    </div>
-  );
+  // Delete ticket
+  async deleteTicket(ticketId: string): Promise<void> {
+    try {
+      await deleteDoc(doc(db, 'tickets', ticketId));
+    } catch (error) {
+      console.error('Error deleting ticket:', error);
+      throw error;
+    }
+  },
+
+  // Get tickets by assignee
+  async getTicketsByAssignee(assigneeId: string): Promise<Ticket[]> {
+    try {
+      const querySnapshot = await getDocs(
+        query(
+          collection(db, 'tickets'), 
+          where('assignedTo', '==', assigneeId),
+          orderBy('createdAt', 'desc')
+        )
+      );
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+        updatedAt: doc.data().updatedAt?.toDate() || new Date()
+      })) as Ticket[];
+    } catch (error) {
+      console.error('Error fetching tickets by assignee:', error);
+      throw error;
+    }
+  }
 };
