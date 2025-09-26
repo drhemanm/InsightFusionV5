@@ -14,6 +14,14 @@ export class SupabaseAuthService {
         : 'http://localhost:3000/dashboard';
       
       console.log('🔗 Using redirect URL:', redirectUrl);
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: redirectUrl
+        }
+      });
+
       if (error) {
         console.error('❌ Google OAuth error:', error);
         logger.error('Google sign in failed', { error });
@@ -78,7 +86,7 @@ export class SupabaseAuthService {
         email,
         password,
         options: {
-            hd: undefined // Allow any domain
+          hd: undefined, // Allow any domain
           emailRedirectTo: `${window.location.origin}/dashboard`
         }
       });
@@ -88,7 +96,7 @@ export class SupabaseAuthService {
         logger.error('Sign up failed', { error });
         return { success: false, error: error.message };
       }
-          error: `OAuth failed: ${error.message}. Please check if your Supabase project is active.`
+      
       if (data.user) {
         console.log('✅ Registration successful for:', data.user.email);
         const user = this.transformSupabaseUser(data.user);
