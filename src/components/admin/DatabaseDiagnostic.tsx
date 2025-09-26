@@ -1,32 +1,35 @@
 import React, { useState } from 'react';
 import { Database, CheckCircle, XCircle, AlertTriangle, Play, RefreshCw } from 'lucide-react';
-import { supabase } from '../../config/supabase';
+import { db, auth } from '../../config/firebase';
+import { collection, getDocs, addDoc, deleteDoc, doc, query, limit } from 'firebase/firestore';
 
 export const DatabaseDiagnostic: React.FC = () => {
-  const [results, setResults] = useState<any>(null);
   const [isRunning, setIsRunning] = useState(false);
+  const [results, setResults] = useState<any>(null);
 
   const runDiagnostic = async () => {
     setIsRunning(true);
-    const diagnosticResults: any = {
-      timestamp: new Date(),
-      tests: []
+    setResults(null);
+
+    const diagnosticResults = {
+      timestamp: new Date().toISOString(),
+      tests: [] as any[]
     };
 
     try {
-      // Test 1: Check if we can connect to Supabase
-      console.log('🔍 Testing Supabase connection...');
+      // Test 1: Check if we can connect to Firebase
+      console.log('🔍 Testing Firebase connection...');
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const user = auth.currentUser;
         diagnosticResults.tests.push({
-          name: 'Supabase Auth Connection',
+          name: 'Firebase Auth Connection',
           status: 'success',
           message: `Connected as: ${user?.email || 'Anonymous'}`,
           details: user
         });
       } catch (error: any) {
         diagnosticResults.tests.push({
-          name: 'Supabase Auth Connection',
+          name: 'Firebase Auth Connection',
           status: 'error',
           message: error.message,
           details: error
@@ -34,30 +37,20 @@ export const DatabaseDiagnostic: React.FC = () => {
       }
 
       // Test 2: Check if contacts table exists
-      console.log('🔍 Checking contacts table...');
+      console.log('🔍 Checking contacts collection...');
       try {
-        const { data, error } = await supabase
-          .from('contacts')
-          .select('count', { count: 'exact', head: true });
+        const snapshot = await getDocs(query(collection(db, 'contacts'), limit(1)));
+        const fullSnapshot = await getDocs(collection(db, 'contacts'));
 
-        if (error) {
-          diagnosticResults.tests.push({
-            name: 'Contacts Table Access',
-            status: 'error',
-            message: error.message,
-            details: error
-          });
-        } else {
-          diagnosticResults.tests.push({
-            name: 'Contacts Table Access',
-            status: 'success',
-            message: `Table exists with ${data || 0} records`,
-            details: { count: data }
-          });
-        }
+        diagnosticResults.tests.push({
+          name: 'Contacts Collection Access',
+          status: 'success',
+          message: `Collection exists with ${fullSnapshot.size} records`,
+          details: { count: fullSnapshot.size }
+        });
       } catch (error: any) {
         diagnosticResults.tests.push({
-          name: 'Contacts Table Access',
+          name: 'Contacts Collection Access',
           status: 'error',
           message: error.message,
           details: error
@@ -65,88 +58,59 @@ export const DatabaseDiagnostic: React.FC = () => {
       }
 
       // Test 3: Check table schema
-      console.log('🔍 Checking table schema...');
+      console.log('🔍 Checking collection structure...');
       try {
-        const { data, error } = await supabase
-          .rpc('get_table_schema', { table_name: 'contacts' })
-          .single();
+        const snapshot = await getDocs(query(collection(db, 'contacts'), limit(1)));
+        const sampleDoc = snapshot.docs[0];
 
-        if (error) {
-          // If RPC doesn't exist, try a simple query to see what columns exist
-          const { data: sampleData, error: sampleError } = await supabase
-            .from('contacts')
-            .select('*')
-            .limit(1);
-
-          if (sampleError) {
-            diagnosticResults.tests.push({
-              name: 'Table Schema Check',
-              status: 'error',
-              message: sampleError.message,
-              details: sampleError
-            });
-          } else {
-            const columns = sampleData && sampleData.length > 0 ? Object.keys(sampleData[0]) : [];
-            diagnosticResults.tests.push({
-              name: 'Table Schema Check',
-              status: 'success',
-              message: `Found ${columns.length} columns`,
-              details: { columns }
-            });
-          }
+        if (sampleDoc) {
+          const fields = Object.keys(sampleDoc.data());
+          diagnosticResults.tests.push({
+            name: 'Collection Structure Check',
+            status: 'success',
+            message: `Found ${fields.length} fields`,
+            details: { fields }
+          });
         } else {
           diagnosticResults.tests.push({
-            name: 'Table Schema Check',
+            name: 'Collection Structure Check',
             status: 'success',
-            message: 'Schema retrieved successfully',
-            details: data
+            message: 'Collection exists but is empty',
+            details: { fields: [] }
           });
         }
       } catch (error: any) {
         diagnosticResults.tests.push({
-          name: 'Table Schema Check',
+          name: 'Collection Structure Check',
           status: 'warning',
-          message: 'Could not check schema',
+          message: 'Could not check collection structure',
           details: error
         });
       }
 
       // Test 4: Try to insert a test record
-      console.log('🔍 Testing insert permissions...');
+      console.log('🔍 Testing write permissions...');
       try {
         const testContact = {
-          first_name: 'Test',
-          last_name: 'User',
+          firstName: 'Test',
+          lastName: 'User',
           email: `test-${Date.now()}@example.com`
         };
 
-        const { data, error } = await supabase
-          .from('contacts')
-          .insert([testContact])
-          .select()
-          .single();
+        const docRef = await addDoc(collection(db, 'contacts'), testContact);
 
-        if (error) {
-          diagnosticResults.tests.push({
-            name: 'Insert Test',
-            status: 'error',
-            message: error.message,
-            details: error
-          });
-        } else {
-          // Clean up test record
-          await supabase.from('contacts').delete().eq('id', data.id);
-          
-          diagnosticResults.tests.push({
-            name: 'Insert Test',
-            status: 'success',
-            message: 'Can create and delete records successfully',
-            details: { testRecordId: data.id }
-          });
-        }
+        // Clean up test record
+        await deleteDoc(doc(db, 'contacts', docRef.id));
+        
+        diagnosticResults.tests.push({
+          name: 'Write Test',
+          status: 'success',
+          message: 'Can create and delete records successfully',
+          details: { testRecordId: docRef.id }
+        });
       } catch (error: any) {
         diagnosticResults.tests.push({
-          name: 'Insert Test',
+          name: 'Write Test',
           status: 'error',
           message: error.message,
           details: error
@@ -154,39 +118,40 @@ export const DatabaseDiagnostic: React.FC = () => {
       }
 
       // Test 5: Check RLS policies
-      console.log('🔍 Checking RLS policies...');
+      console.log('🔍 Checking Firebase security rules...');
       try {
-        const { data, error } = await supabase
-          .from('contacts')
-          .select('id')
-          .limit(1);
+        const snapshot = await getDocs(query(collection(db, 'contacts'), limit(1)));
 
-        if (error) {
-          diagnosticResults.tests.push({
-            name: 'RLS Policy Check',
-            status: 'error',
-            message: `RLS blocking access: ${error.message}`,
-            details: error
-          });
-        } else {
-          diagnosticResults.tests.push({
-            name: 'RLS Policy Check',
-            status: 'success',
-            message: 'RLS policies allow read access',
-            details: { recordsAccessible: data?.length || 0 }
-          });
-        }
+        diagnosticResults.tests.push({
+          name: 'Security Rules Check',
+          status: 'success',
+          message: 'Firebase security rules allow read access',
+          details: { recordsAccessible: snapshot.size }
+        });
       } catch (error: any) {
         diagnosticResults.tests.push({
-          name: 'RLS Policy Check',
+          name: 'Security Rules Check',
           status: 'error',
           message: error.message,
           details: error
         });
       }
 
-    } catch (error) {
-      console.error('❌ Diagnostic failed:', error);
+      // Calculate overall status
+      const hasErrors = diagnosticResults.tests.some((t: any) => t.status === 'error');
+      const hasWarnings = diagnosticResults.tests.some((t: any) => t.status === 'warning');
+      
+      diagnosticResults.overallStatus = hasErrors ? 'error' : hasWarnings ? 'warning' : 'success';
+
+    } catch (error: any) {
+      console.error('Diagnostic failed:', error);
+      diagnosticResults.tests.push({
+        name: 'Overall Diagnostic',
+        status: 'error',
+        message: 'Diagnostic process failed',
+        details: error
+      });
+      diagnosticResults.overallStatus = 'error';
     }
 
     setResults(diagnosticResults);
@@ -202,34 +167,47 @@ export const DatabaseDiagnostic: React.FC = () => {
       case 'warning':
         return <AlertTriangle className="text-yellow-500" size={20} />;
       default:
-        return <Database className="text-gray-500" size={20} />;
+        return null;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'success':
+        return 'text-green-700 bg-green-50 border-green-200';
+      case 'error':
+        return 'text-red-700 bg-red-50 border-red-200';
+      case 'warning':
+        return 'text-yellow-700 bg-yellow-50 border-yellow-200';
+      default:
+        return 'text-gray-700 bg-gray-50 border-gray-200';
     }
   };
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <div className="flex items-center justify-between mb-6">
+      <div className="bg-white rounded-lg shadow-lg">
+        <div className="p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
             <Database className="text-blue-500" size={24} />
             <div>
-              <h1 className="text-2xl font-bold">Database Diagnostic</h1>
-              <p className="text-gray-600">Check your Supabase database connection and schema</p>
+              <h1 className="text-2xl font-bold">Firebase Diagnostic</h1>
+              <p className="text-gray-600">Check your Firebase connection and collections</p>
             </div>
           </div>
           <button
             onClick={runDiagnostic}
             disabled={isRunning}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            className="mt-4 flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isRunning ? (
               <>
-                <RefreshCw className="animate-spin" size={20} />
-                Running...
+                <RefreshCw className="animate-spin" size={16} />
+                Running Diagnostic...
               </>
             ) : (
               <>
-                <Play size={20} />
+                <Play size={16} />
                 Run Diagnostic
               </>
             )}
@@ -237,55 +215,58 @@ export const DatabaseDiagnostic: React.FC = () => {
         </div>
 
         {results && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Diagnostic Results</h2>
-              <span className="text-sm text-gray-500">
-                {results.timestamp.toLocaleString()}
-              </span>
+          <div className="p-6">
+            <div className="mb-6">
+              <div className={`p-4 rounded-lg border ${getStatusColor(results.overallStatus)}`}>
+                <div className="flex items-center gap-2">
+                  {getStatusIcon(results.overallStatus)}
+                  <h2 className="text-lg font-semibold">
+                    Overall Status: {results.overallStatus === 'success' ? 'All Good!' : 
+                                   results.overallStatus === 'warning' ? 'Some Issues' : 'Problems Found'}
+                  </h2>
+                </div>
+                <p className="mt-1 text-sm">
+                  Diagnostic completed at {new Date(results.timestamp).toLocaleString()}
+                </p>
+              </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Test Results</h3>
               {results.tests.map((test: any, index: number) => (
-                <div
-                  key={index}
-                  className={`p-4 rounded-lg border ${
-                    test.status === 'success' ? 'bg-green-50 border-green-200' :
-                    test.status === 'error' ? 'bg-red-50 border-red-200' :
-                    'bg-yellow-50 border-yellow-200'
-                  }`}
-                >
-                  <div className="flex items-center gap-3 mb-2">
+                <div key={index} className={`p-4 rounded-lg border ${getStatusColor(test.status)}`}>
+                  <div className="flex items-start gap-3">
                     {getStatusIcon(test.status)}
-                    <h3 className="font-medium">{test.name}</h3>
+                    <div className="flex-1">
+                      <h4 className="font-medium">{test.name}</h4>
+                      <p className="text-sm mt-1">{test.message}</p>
+                      {test.details && (
+                        <details className="mt-2">
+                          <summary className="text-xs cursor-pointer hover:underline">
+                            View Details
+                          </summary>
+                          <pre className="mt-2 text-xs bg-gray-100 p-2 rounded overflow-auto">
+                            {JSON.stringify(test.details, null, 2)}
+                          </pre>
+                        </details>
+                      )}
+                    </div>
                   </div>
-                  <p className="text-sm text-gray-700 mb-2">{test.message}</p>
-                  {test.details && (
-                    <details className="text-xs">
-                      <summary className="cursor-pointer text-gray-500 hover:text-gray-700">
-                        View Details
-                      </summary>
-                      <pre className="mt-2 p-2 bg-gray-100 rounded overflow-auto">
-                        {JSON.stringify(test.details, null, 2)}
-                      </pre>
-                    </details>
-                  )}
                 </div>
               ))}
             </div>
 
-            {/* Quick Fixes */}
             <div className="mt-6 p-4 bg-blue-50 rounded-lg">
               <h3 className="font-medium text-blue-900 mb-2">Quick Fixes</h3>
               <div className="space-y-2 text-sm text-blue-800">
-                {results.tests.some((t: any) => t.status === 'error' && t.name.includes('Table')) && (
-                  <p>• The contacts table doesn't exist. Run the migration SQL in your Supabase SQL Editor.</p>
+                {results.tests.some((t: any) => t.status === 'error' && t.name.includes('Collection')) && (
+                  <p>• The contacts collection doesn't exist. Create some contacts to initialize it.</p>
                 )}
                 {results.tests.some((t: any) => t.status === 'error' && t.message.includes('permission')) && (
-                  <p>• RLS policies are blocking access. Check your Row Level Security settings.</p>
+                  <p>• Firebase security rules are blocking access. Check your Firestore rules.</p>
                 )}
-                {results.tests.some((t: any) => t.status === 'error' && t.message.includes('column')) && (
-                  <p>• Table schema doesn't match. Update your table structure.</p>
+                {results.tests.some((t: any) => t.status === 'error' && t.message.includes('field')) && (
+                  <p>• Collection structure doesn't match. Update your document structure.</p>
                 )}
               </div>
             </div>

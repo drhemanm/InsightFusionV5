@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Database, Wifi, WifiOff } from 'lucide-react';
-import { DatabaseAudit } from '../../utils/audit/DatabaseAudit';
+import { db } from '../../config/firebase';
+import { collection, getDocs } from 'firebase/firestore';
 
 export const DatabaseStatus: React.FC = () => {
   const [isConnected, setIsConnected] = useState<boolean | null>(null);
@@ -8,9 +9,17 @@ export const DatabaseStatus: React.FC = () => {
 
   useEffect(() => {
     const checkConnection = async () => {
-      const connected = await DatabaseAudit.quickHealthCheck();
-      setIsConnected(connected);
-      setLastCheck(new Date());
+      try {
+        // Test Firebase connection by trying to read from a collection
+        const testQuery = query(collection(db, 'contacts'), limit(1));
+        await getDocs(testQuery);
+        setIsConnected(true);
+        setLastCheck(new Date());
+      } catch (error) {
+        console.error('Firebase connection test failed:', error);
+        setIsConnected(false);
+        setLastCheck(new Date());
+      }
     };
 
     checkConnection();

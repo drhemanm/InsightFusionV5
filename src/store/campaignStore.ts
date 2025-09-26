@@ -1,195 +1,57 @@
-import { create } from 'zustand';
-import { supabase } from '../config/supabase';
-import { logger } from '../utils/monitoring/logger';
-import type { Campaign, CampaignTarget } from '../types/campaigns';
+import React, { useState, useEffect } from 'react';
+import { Database, Wifi, WifiOff } from 'lucide-react';
+import { db } from '../../config/firebase';
+import { collection, getDocs, query, limit } from 'firebase/firestore';
 
-interface CampaignStore {
-  campaigns: Campaign[];
-  selectedCampaign: Campaign | null;
-  isLoading: boolean;
-  error: string | null;
-  
-  fetchCampaigns: () => Promise<void>;
-  createCampaign: (data: Omit<Campaign, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Campaign>;
-  updateCampaign: (id: string, updates: Partial<Campaign>) => Promise<void>;
-  deleteCampaign: (id: string) => Promise<void>;
-  addCampaignTarget: (campaignId: string, target: Omit<CampaignTarget, 'id' | 'campaignId' | 'createdAt' | 'updatedAt'>) => Promise<void>;
-  updateCampaignTarget: (campaignId: string, targetId: string, updates: Partial<CampaignTarget>) => Promise<void>;
-  removeCampaignTarget: (campaignId: string, targetId: string) => Promise<void>;
-}
+export const DatabaseStatus: React.FC = () => {
+  const [isConnected, setIsConnected] = useState<boolean | null>(null);
+  const [lastCheck, setLastCheck] = useState<Date | null>(null);
 
-export const useCampaignStore = create<CampaignStore>((set, get) => ({
-  campaigns: [],
-  selectedCampaign: null,
-  isLoading: false,
-  error: null,
+  useEffect(() => {
+    const checkConnection = async () => {
+      try {
+        // Test Firebase connection by trying to read from a collection
+        const testQuery = query(collection(db, 'contacts'), limit(1));
+        await getDocs(testQuery);
+        setIsConnected(true);
+        setLastCheck(new Date());
+      } catch (error) {
+        console.error('Firebase connection test failed:', error);
+        setIsConnected(false);
+        setLastCheck(new Date());
+      }
+    };
 
-  fetchCampaigns: async () => {
-    set({ isLoading: true });
-    try {
-      const { data: campaigns, error } = await supabase
-        .from('campaigns')
-        .select('*')
-        .order('created_at', { ascending: false });
+    checkConnection();
+    const interval = setInterval(checkConnection, 30000); // Check every 30 seconds
 
-      if (error) throw error;
-      
-      set({ campaigns: campaigns || [], isLoading: false });
-    } catch (error) {
-      logger.error('Failed to fetch campaigns', { error });
-      set({ error: 'Failed to fetch campaigns', isLoading: false });
-    }
-  },
+    return () => clearInterval(interval);
+  }, []);
 
-  createCampaign: async (data) => {
-    set({ isLoading: true });
-    try {
-      const { data: campaign, error } = await supabase
-        .from('campaigns')
-        .insert([{
-          name: data.name,
-          type: data.type,
-          description: data.description,
-          budget: data.budget,
-          start_date: data.startDate.toISOString(),
-          end_date: data.endDate.toISOString(),
-          status: data.status,
-          created_by: data.createdBy,
-          manager_id: data.managerId,
-          kpis: data.kpis,
-          metrics: data.metrics
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      const newCampaign: Campaign = {
-        ...data,
-        id: campaign.id,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
-
-      set(state => ({
-        campaigns: [...state.campaigns, newCampaign],
-        isLoading: false
-      }));
-
-      return newCampaign;
-    } catch (error) {
-      logger.error('Failed to create campaign', { error });
-      set({ error: 'Failed to create campaign', isLoading: false });
-      throw error;
-    }
-  },
-
-  updateCampaign: async (id, updates) => {
-    set({ isLoading: true });
-    try {
-      const { error } = await supabase
-        .from('campaigns')
-        .update({
-          name: updates.name,
-          type: updates.type,
-          description: updates.description,
-          budget: updates.budget,
-          start_date: updates.startDate?.toISOString(),
-          end_date: updates.endDate?.toISOString(),
-          status: updates.status,
-          manager_id: updates.managerId,
-          kpis: updates.kpis,
-          metrics: updates.metrics,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', id);
-
-      if (error) throw error;
-
-      set(state => ({
-        campaigns: state.campaigns.map(campaign =>
-          campaign.id === id
-            ? { ...campaign, ...updates, updatedAt: new Date() }
-            : campaign
-        ),
-        isLoading: false
-      }));
-    } catch (error) {
-      logger.error('Failed to update campaign', { error });
-      set({ error: 'Failed to update campaign', isLoading: false });
-      throw error;
-    }
-  },
-
-  deleteCampaign: async (id) => {
-    set({ isLoading: true });
-    try {
-      const { error } = await supabase
-        .from('campaigns')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-      
-      set(state => ({
-        campaigns: state.campaigns.filter(campaign => campaign.id !== id),
-        isLoading: false
-      }));
-    } catch (error) {
-      logger.error('Failed to delete campaign', { error });
-      set({ error: 'Failed to delete campaign', isLoading: false });
-      throw error;
-    }
-  },
-
-  addCampaignTarget: async (campaignId, target) => {
-    try {
-      const { error } = await supabase
-        .from('campaign_targets')
-        .insert([{
-          campaign_id: campaignId,
-          target_type: target.targetType,
-          target_id: target.targetId,
-          status: target.status,
-          notes: target.notes
-        }]);
-
-      if (error) throw error;
-    } catch (error) {
-      logger.error('Failed to add campaign target', { error });
-      throw error;
-    }
-  },
-
-  updateCampaignTarget: async (campaignId, targetId, updates) => {
-    try {
-      const { error } = await supabase
-        .from('campaign_targets')
-        .update({
-          status: updates.status,
-          notes: updates.notes,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', targetId);
-
-      if (error) throw error;
-    } catch (error) {
-      logger.error('Failed to update campaign target', { error });
-      throw error;
-    }
-  },
-
-  removeCampaignTarget: async (campaignId, targetId) => {
-    try {
-      const { error } = await supabase
-        .from('campaign_targets')
-        .delete()
-        .eq('id', targetId);
-
-      if (error) throw error;
-    } catch (error) {
-      logger.error('Failed to remove campaign target', { error });
-      throw error;
-    }
-  }
-}));
+  return (
+    <div className="fixed bottom-4 left-4 z-50">
+      <div className={`flex items-center gap-2 px-3 py-2 rounded-lg shadow-lg ${
+        isConnected === null ? 'bg-gray-100 text-gray-600' :
+        isConnected ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+      }`}>
+        <Database size={16} />
+        {isConnected === null ? (
+          <Wifi className="animate-pulse" size={16} />
+        ) : isConnected ? (
+          <Wifi size={16} />
+        ) : (
+          <WifiOff size={16} />
+        )}
+        <span className="text-sm font-medium">
+          {isConnected === null ? 'Checking...' :
+           isConnected ? 'DB Connected' : 'DB Disconnected'}
+        </span>
+        {lastCheck && (
+          <span className="text-xs opacity-75">
+            {lastCheck.toLocaleTimeString()}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+};

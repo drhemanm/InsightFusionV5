@@ -1,19 +1,16 @@
-import { supabase } from '../../config/supabase';
+import { db } from '../../config/firebase';
+import { collection, getDocs, query, limit } from 'firebase/firestore';
 import { logger } from '../monitoring/logger';
 
-interface DatabaseAuditResult {
+interface FirebaseAuditResult {
   connection: {
     status: 'connected' | 'failed';
     latency?: number;
     error?: string;
   };
-  schema: {
-    tables: string[];
-    missingTables: string[];
-    policies: Array<{
-      table: string;
-      policies: string[];
-    }>;
+  collections: {
+    existing: string[];
+    missing: string[];
   };
   data: {
     userCount: number;
@@ -25,19 +22,18 @@ interface DatabaseAuditResult {
   permissions: {
     canRead: boolean;
     canWrite: boolean;
-    userRole?: string;
   };
   issues: string[];
   recommendations: string[];
 }
 
 export class DatabaseAudit {
-  static async performFullAudit(): Promise<DatabaseAuditResult> {
-    console.log('🔍 Starting comprehensive database audit...');
+  static async performFullAudit(): Promise<FirebaseAuditResult> {
+    console.log('🔍 Starting comprehensive Firebase audit...');
     
-    const result: DatabaseAuditResult = {
+    const result: FirebaseAuditResult = {
       connection: { status: 'failed' },
-      schema: { tables: [], missingTables: [], policies: [] },
+      collections: { existing: [], missing: [] },
       data: { userCount: 0, contactCount: 0, dealCount: 0, ticketCount: 0, campaignCount: 0 },
       permissions: { canRead: false, canWrite: false },
       issues: [],
@@ -47,9 +43,9 @@ export class DatabaseAudit {
     // 1. Test Basic Connection
     await this.testConnection(result);
     
-    // 2. Check Schema
+    // 2. Check Collections
     if (result.connection.status === 'connected') {
-      await this.checkSchema(result);
+      await this.checkCollections(result);
       await this.checkData(result);
       await this.checkPermissions(result);
     }
@@ -60,115 +56,102 @@ export class DatabaseAudit {
     return result;
   }
 
-  private static async testConnection(result: DatabaseAuditResult): Promise<void> {
+  private static async testConnection(result: FirebaseAuditResult): Promise<void> {
     try {
-      console.log('🔌 Testing Supabase connection...');
+      console.log('🔌 Testing Firebase connection...');
       const startTime = performance.now();
       
-      const { data, error } = await supabase
-        .from('users')
-        .select('count', { count: 'exact', head: true });
+      const testQuery = query(collection(db, 'contacts'), limit(1));
+      await getDocs(testQuery);
 
       const latency = performance.now() - startTime;
 
-      if (error) {
-        console.error('❌ Connection test failed:', error);
-        result.connection = {
-          status: 'failed',
-          error: error.message,
-          latency
-        };
-        result.issues.push(`Database connection failed: ${error.message}`);
-      } else {
-        console.log('✅ Connection test successful');
-        result.connection = {
-          status: 'connected',
-          latency
-        };
-      }
+      console.log('✅ Connection test successful');
+      result.connection = {
+        status: 'connected',
+        latency
+      };
     } catch (error: any) {
-      console.error('❌ Connection exception:', error);
+      console.error('❌ Connection test failed:', error);
       result.connection = {
         status: 'failed',
         error: error.message
       };
-      result.issues.push(`Connection exception: ${error.message}`);
+      result.issues.push(`Firebase connection failed: ${error.message}`);
     }
   }
 
-  private static async checkSchema(result: DatabaseAuditResult): Promise<void> {
+  private static async checkCollections(result: FirebaseAuditResult): Promise<void> {
     try {
-      console.log('📋 Checking database schema...');
+      console.log('📋 Checking Firebase collections...');
       
-      // Expected tables based on migrations
-      const expectedTables = [
-        'users', 'organizations', 'contacts', 'deals', 'tasks', 
-        'activities', 'campaigns', 'campaign_targets', 'tickets', 
-        'ticket_comments', 'ticket_history', 'tenants', 'tenant_users'
+      const expectedCollections = [
+        'users', 'contacts', 'deals', 'tasks', 
+        'activities', 'campaigns', 'tickets'
       ];
 
-      // Check which tables exist
-      const { data: tables, error } = await supabase
-        .from('information_schema.tables')
-        .select('table_name')
-        .eq('table_schema', 'public')
-        .eq('table_type', 'BASE TABLE');
+      const existingCollections = [];
 
-      if (error) {
-        result.issues.push(`Schema check failed: ${error.message}`);
-        return;
+      for (const collectionName of expectedCollections) {
+        try {
+          const testQuery = query(collection(db, collectionName), limit(1));
+          await getDocs(testQuery);
+          existingCollections.push(collectionName);
+        } catch (error) {
+          console.warn(`Collection ${collectionName} not accessible:`, error);
+        }
       }
 
-      const existingTables = tables?.map(t => t.table_name) || [];
-      result.schema.tables = existingTables;
-      
-      // Find missing tables
-      result.schema.missingTables = expectedTables.filter(
-        table => !existingTables.includes(table)
+      result.collections.existing = existingCollections;
+      result.collections.missing = expectedCollections.filter(
+        col => !existingCollections.includes(col)
       );
 
-      if (result.schema.missingTables.length > 0) {
-        result.issues.push(`Missing tables: ${result.schema.missingTables.join(', ')}`);
+      if (result.collections.missing.length > 0) {
+        result.issues.push(`Missing collections: ${result.collections.missing.join(', ')}`);
       }
 
-      console.log('📊 Schema check results:');
-      console.log('  - Existing tables:', existingTables.length);
-      console.log('  - Missing tables:', result.schema.missingTables.length);
+      console.log('📊 Collections check results:');
+      console.log('  - Existing collections:', existingCollections.length);
+      console.log('  - Missing collections:', result.collections.missing.length);
 
     } catch (error: any) {
-      console.error('❌ Schema check failed:', error);
-      result.issues.push(`Schema check exception: ${error.message}`);
+      console.error('❌ Collections check failed:', error);
+      result.issues.push(`Collections check exception: ${error.message}`);
     }
   }
 
-  private static async checkData(result: DatabaseAuditResult): Promise<void> {
+  private static async checkData(result: FirebaseAuditResult): Promise<void> {
     try {
       console.log('📊 Checking data counts...');
 
-      // Check data in each table
-      const tableCounts = await Promise.allSettled([
-        supabase.from('users').select('*', { count: 'exact', head: true }),
-        supabase.from('contacts').select('*', { count: 'exact', head: true }),
-        supabase.from('deals').select('*', { count: 'exact', head: true }),
-        supabase.from('tickets').select('*', { count: 'exact', head: true }),
-        supabase.from('campaigns').select('*', { count: 'exact', head: true })
-      ]);
-
-      // Process results
-      if (tableCounts[0].status === 'fulfilled') {
-        result.data.userCount = tableCounts[0].value.count || 0;
-      }
-      if (tableCounts[1].status === 'fulfilled') {
-        result.data.contactCount = tableCounts[1].value.count || 0;
-      }
-      if (tableCounts[2].status === 'fulfilled') {
-        result.data.dealCount = tableCounts[2].value.count || 0;
-      }
-      if (tableCounts[3].status === 'fulfilled') {
-        result.data.ticketCount = tableCounts[3].value.count || 0;
-      }
-      if (tableCounts[4].status === 'fulfilled') {
-        result.data.campaignCount = tableCounts[4].value.count || 0;
+      const collections = ['users', 'contacts', 'deals', 'tickets', 'campaigns'];
+      
+      for (const collectionName of collections) {
+        try {
+          const snapshot = await getDocs(collection(db, collectionName));
+          const count = snapshot.size;
+          
+          switch (collectionName) {
+            case 'users':
+              result.data.userCount = count;
+              break;
+            case 'contacts':
+              result.data.contactCount = count;
+              break;
+            case 'deals':
+              result.data.dealCount = count;
+              break;
+            case 'tickets':
+              result.data.ticketCount = count;
+              break;
+            case 'campaigns':
+              result.data.campaignCount = count;
+              break;
+          }
+        } catch (error) {
+          console.warn(`Could not count ${collectionName}:`, error);
+        }
       }
 
       console.log('📈 Data counts:');
@@ -184,13 +167,13 @@ export class DatabaseAudit {
     }
   }
 
-  private static async checkPermissions(result: DatabaseAuditResult): Promise<void> {
+  private static async checkPermissions(result: FirebaseAuditResult): Promise<void> {
     try {
       console.log('🔐 Checking permissions...');
 
       // Test read permissions
       try {
-        await supabase.from('users').select('id').limit(1);
+        await getDocs(query(collection(db, 'contacts'), limit(1)));
         result.permissions.canRead = true;
         console.log('✅ Read permissions: OK');
       } catch (error: any) {
@@ -201,43 +184,20 @@ export class DatabaseAudit {
 
       // Test write permissions
       try {
-        // Try to insert a test record (this will likely fail due to RLS, but we can check the error type)
-        const { error } = await supabase
-          .from('users')
-          .insert({ 
-            email: 'test@example.com',
-            first_name: 'Test',
-            last_name: 'User'
-          });
-
-        if (error) {
-          if (error.message.includes('RLS') || error.message.includes('policy')) {
-            result.permissions.canWrite = true; // RLS is working, which is good
-            console.log('✅ Write permissions: OK (RLS active)');
-          } else {
-            result.permissions.canWrite = false;
-            result.issues.push(`Write permission issue: ${error.message}`);
-            console.log('❌ Write permissions: ISSUE');
-          }
-        } else {
-          result.permissions.canWrite = true;
-          console.log('✅ Write permissions: OK');
-        }
+        const testDoc = {
+          firstName: 'Test',
+          lastName: 'User',
+          email: `test-${Date.now()}@example.com`,
+          createdAt: new Date().toISOString()
+        };
+        
+        await addDoc(collection(db, 'contacts'), testDoc);
+        result.permissions.canWrite = true;
+        console.log('✅ Write permissions: OK');
       } catch (error: any) {
         result.permissions.canWrite = false;
-        result.issues.push(`Write permission check failed: ${error.message}`);
-        console.log('❌ Write permissions: FAILED');
-      }
-
-      // Check current user
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          result.permissions.userRole = user.user_metadata?.role || 'user';
-          console.log('👤 Current user role:', result.permissions.userRole);
-        }
-      } catch (error: any) {
-        console.log('❌ Could not get current user:', error.message);
+        result.issues.push(`Write permission denied: ${error.message}`);
+        console.log('❌ Write permissions: DENIED');
       }
 
     } catch (error: any) {
@@ -246,35 +206,35 @@ export class DatabaseAudit {
     }
   }
 
-  private static generateRecommendations(result: DatabaseAuditResult): void {
+  private static generateRecommendations(result: FirebaseAuditResult): void {
     console.log('💡 Generating recommendations...');
 
     if (result.connection.status === 'failed') {
-      result.recommendations.push('Fix database connection issues before proceeding');
-      result.recommendations.push('Check Supabase project status and credentials');
+      result.recommendations.push('Fix Firebase connection issues before proceeding');
+      result.recommendations.push('Check Firebase project configuration and API keys');
     }
 
-    if (result.schema.missingTables.length > 0) {
-      result.recommendations.push('Run database migrations to create missing tables');
-      result.recommendations.push('Verify migration files are properly configured');
+    if (result.collections.missing.length > 0) {
+      result.recommendations.push('Create missing collections by adding data');
+      result.recommendations.push('Collections are created automatically when you add documents');
     }
 
     if (!result.permissions.canRead) {
-      result.recommendations.push('Check RLS policies for read access');
-      result.recommendations.push('Verify user authentication and role assignments');
+      result.recommendations.push('Check Firestore security rules for read access');
+      result.recommendations.push('Verify user authentication and permissions');
     }
 
     if (!result.permissions.canWrite) {
-      result.recommendations.push('Review RLS policies for write access');
+      result.recommendations.push('Review Firestore security rules for write access');
       result.recommendations.push('Ensure proper user permissions are configured');
     }
 
     if (result.connection.latency && result.connection.latency > 1000) {
-      result.recommendations.push('Database latency is high - consider optimizing queries');
+      result.recommendations.push('Firebase latency is high - check network connection');
     }
 
     if (result.data.userCount === 0) {
-      result.recommendations.push('No users found - consider creating initial admin user');
+      result.recommendations.push('No users found - create initial admin user');
     }
 
     console.log('📝 Recommendations generated:', result.recommendations.length);
@@ -282,11 +242,9 @@ export class DatabaseAudit {
 
   static async quickHealthCheck(): Promise<boolean> {
     try {
-      const { error } = await supabase
-        .from('users')
-        .select('count', { count: 'exact', head: true });
-      
-      return !error;
+      const testQuery = query(collection(db, 'contacts'), limit(1));
+      await getDocs(testQuery);
+      return true;
     } catch {
       return false;
     }
