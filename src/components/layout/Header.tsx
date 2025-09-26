@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Database, Wifi, WifiOff } from 'lucide-react';
 import { db } from '../../config/firebase';
-import { collection, getDocs, query, limit } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 
 export const DatabaseStatus: React.FC = () => {
   const [isConnected, setIsConnected] = useState<boolean | null>(null);
@@ -11,7 +12,6 @@ export const DatabaseStatus: React.FC = () => {
     const checkConnection = async () => {
       try {
         // Test Firebase connection by trying to read from a collection
-        const testQuery = query(collection(db, 'contacts'), limit(1));
         await getDocs(testQuery);
         setIsConnected(true);
         setLastCheck(new Date());
