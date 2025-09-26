@@ -1,57 +1,129 @@
-import React, { useState, useEffect } from 'react';
-import { Database, Wifi, WifiOff } from 'lucide-react';
-import { db } from '../../config/firebase';
-import { collection, getDocs } from 'firebase/firestore';
-import { collection, getDocs } from 'firebase/firestore';
+import { create } from 'zustand';
+import { Deal } from '../types/deals';
+import { db } from '../config/firebase';
+import { 
+  collection, 
+  addDoc, 
+  getDocs, 
+  doc, 
+  updateDoc, 
+  deleteDoc, 
+  query, 
+  where, 
+  orderBy 
+} from 'firebase/firestore';
 
-export const DatabaseStatus: React.FC = () => {
-  const [isConnected, setIsConnected] = useState<boolean | null>(null);
-  const [lastCheck, setLastCheck] = useState<Date | null>(null);
+interface DealState {
+  deals: Deal[];
+  loading: boolean;
+  error: string | null;
+  fetchDeals: () => Promise<void>;
+  addDeal: (deal: Omit<Deal, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateDeal: (id: string, updates: Partial<Deal>) => Promise<void>;
+  deleteDeal: (id: string) => Promise<void>;
+  getDealsByStage: (stage: string) => Deal[];
+  getDealsByAgent: (agentId: string) => Deal[];
+}
 
-  useEffect(() => {
-    const checkConnection = async () => {
-      try {
-        // Test Firebase connection by trying to read from a collection
-        await getDocs(testQuery);
-        setIsConnected(true);
-        setLastCheck(new Date());
-      } catch (error) {
-        console.error('Firebase connection test failed:', error);
-        setIsConnected(false);
-        setLastCheck(new Date());
-      }
-    };
+export const useDealStore = create<DealState>((set, get) => ({
+  deals: [],
+  loading: false,
+  error: null,
 
-    checkConnection();
-    const interval = setInterval(checkConnection, 30000); // Check every 30 seconds
+  fetchDeals: async () => {
+    set({ loading: true, error: null });
+    try {
+      const dealsCollection = collection(db, 'deals');
+      const q = query(dealsCollection, orderBy('createdAt', 'desc'));
+      const querySnapshot = await getDocs(q);
+      
+      const deals: Deal[] = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+        updatedAt: doc.data().updatedAt?.toDate() || new Date(),
+      })) as Deal[];
+      
+      set({ deals, loading: false });
+    } catch (error) {
+      console.error('Error fetching deals:', error);
+      set({ error: 'Failed to fetch deals', loading: false });
+    }
+  },
 
-    return () => clearInterval(interval);
-  }, []);
+  addDeal: async (dealData) => {
+    set({ loading: true, error: null });
+    try {
+      const dealsCollection = collection(db, 'deals');
+      const now = new Date();
+      
+      const newDeal = {
+        ...dealData,
+        createdAt: now,
+        updatedAt: now,
+      };
+      
+      const docRef = await addDoc(dealsCollection, newDeal);
+      
+      const deal: Deal = {
+        id: docRef.id,
+        ...newDeal,
+      };
+      
+      set(state => ({
+        deals: [deal, ...state.deals],
+        loading: false
+      }));
+    } catch (error) {
+      console.error('Error adding deal:', error);
+      set({ error: 'Failed to add deal', loading: false });
+    }
+  },
 
-  return (
-    <div className="fixed bottom-4 left-4 z-50">
-      <div className={`flex items-center gap-2 px-3 py-2 rounded-lg shadow-lg ${
-        isConnected === null ? 'bg-gray-100 text-gray-600' :
-        isConnected ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-      }`}>
-        <Database size={16} />
-        {isConnected === null ? (
-          <Wifi className="animate-pulse" size={16} />
-        ) : isConnected ? (
-          <Wifi size={16} />
-        ) : (
-          <WifiOff size={16} />
-        )}
-        <span className="text-sm font-medium">
-          {isConnected === null ? 'Checking...' :
-           isConnected ? 'DB Connected' : 'DB Disconnected'}
-        </span>
-        {lastCheck && (
-          <span className="text-xs opacity-75">
-            {lastCheck.toLocaleTimeString()}
-          </span>
-        )}
-      </div>
-    </div>
-  );
-};
+  updateDeal: async (id, updates) => {
+    set({ loading: true, error: null });
+    try {
+      const dealDoc = doc(db, 'deals', id);
+      const updateData = {
+        ...updates,
+        updatedAt: new Date(),
+      };
+      
+      await updateDoc(dealDoc, updateData);
+      
+      set(state => ({
+        deals: state.deals.map(deal =>
+          deal.id === id ? { ...deal, ...updateData } : deal
+        ),
+        loading: false
+      }));
+    } catch (error) {
+      console.error('Error updating deal:', error);
+      set({ error: 'Failed to update deal', loading: false });
+    }
+  },
+
+  deleteDeal: async (id) => {
+    set({ loading: true, error: null });
+    try {
+      const dealDoc = doc(db, 'deals', id);
+      await deleteDoc(dealDoc);
+      
+      set(state => ({
+        deals: state.deals.filter(deal => deal.id !== id),
+        loading: false
+      }));
+    } catch (error) {
+      console.error('Error deleting deal:', error);
+      set({ error: 'Failed to delete deal', loading: false });
+    }
+  },
+
+  getDealsByStage: (stage) => {
+    return get().deals.filter(deal => deal.stage === stage);
+  },
+
+  getDealsByAgent: (agentId) => {
+    return get().deals.filter(deal => deal.assignedTo === agentId);
+  },
+}));
