@@ -1,58 +1,97 @@
-import React, { useState, useEffect } from 'react';
-import { Database, Wifi, WifiOff } from 'lucide-react';
-import { db } from '../../config/firebase';
-import { collection, getDocs } from 'firebase/firestore';
-import { collection, getDocs, query, limit } from 'firebase/firestore';
+import { create } from 'zustand';
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  signOut, 
+  onAuthStateChanged,
+  User as FirebaseUser
+} from 'firebase/auth';
+import { auth } from '../config/firebase';
 
-export const DatabaseStatus: React.FC = () => {
-  const [isConnected, setIsConnected] = useState<boolean | null>(null);
-  const [lastCheck, setLastCheck] = useState<Date | null>(null);
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: 'admin' | 'agent' | 'user';
+}
 
-  useEffect(() => {
-    const checkConnection = async () => {
-      try {
-        // Test Firebase connection by trying to read from a collection
-        const testQuery = query(collection(db, 'test'), limit(1));
-        await getDocs(testQuery);
-        setIsConnected(true);
-        setLastCheck(new Date());
-      } catch (error) {
-        console.error('Firebase connection test failed:', error);
-        setIsConnected(false);
-        setLastCheck(new Date());
-      }
+interface AuthState {
+  user: User | null;
+  isLoading: boolean;
+  error: string | null;
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, name: string) => Promise<void>;
+  logout: () => Promise<void>;
+  clearError: () => void;
+}
+
+export const useAuthStore = create<AuthState>((set, get) => ({
+  user: null,
+  isLoading: false,
+  error: null,
+
+  login: async (email: string, password: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const firebaseUser = userCredential.user;
+      
+      const user: User = {
+        id: firebaseUser.uid,
+        email: firebaseUser.email || '',
+        name: firebaseUser.displayName || 'User',
+        role: 'user'
+      };
+      
+      set({ user, isLoading: false });
+    } catch (error: any) {
+      set({ error: error.message, isLoading: false });
+    }
+  },
+
+  register: async (email: string, password: string, name: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const firebaseUser = userCredential.user;
+      
+      const user: User = {
+        id: firebaseUser.uid,
+        email: firebaseUser.email || '',
+        name: name,
+        role: 'user'
+      };
+      
+      set({ user, isLoading: false });
+    } catch (error: any) {
+      set({ error: error.message, isLoading: false });
+    }
+  },
+
+  logout: async () => {
+    set({ isLoading: true });
+    try {
+      await signOut(auth);
+      set({ user: null, isLoading: false });
+    } catch (error: any) {
+      set({ error: error.message, isLoading: false });
+    }
+  },
+
+  clearError: () => set({ error: null })
+}));
+
+// Initialize auth state listener
+onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
+  if (firebaseUser) {
+    const user: User = {
+      id: firebaseUser.uid,
+      email: firebaseUser.email || '',
+      name: firebaseUser.displayName || 'User',
+      role: 'user'
     };
-
-    checkConnection();
-    const interval = setInterval(checkConnection, 30000); // Check every 30 seconds
-
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <div className="fixed bottom-4 left-4 z-50">
-      <div className={`flex items-center gap-2 px-3 py-2 rounded-lg shadow-lg ${
-        isConnected === null ? 'bg-gray-100 text-gray-600' :
-        isConnected ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-      }`}>
-        <Database size={16} />
-        {isConnected === null ? (
-          <Wifi className="animate-pulse" size={16} />
-        ) : isConnected ? (
-          <Wifi size={16} />
-        ) : (
-          <WifiOff size={16} />
-        )}
-        <span className="text-sm font-medium">
-          {isConnected === null ? 'Checking...' :
-           isConnected ? 'DB Connected' : 'DB Disconnected'}
-        </span>
-        {lastCheck && (
-          <span className="text-xs opacity-75">
-            {lastCheck.toLocaleTimeString()}
-          </span>
-        )}
-      </div>
-    </div>
-  );
-};
+    useAuthStore.setState({ user, isLoading: false });
+  } else {
+    useAuthStore.setState({ user: null, isLoading: false });
+  }
+});
