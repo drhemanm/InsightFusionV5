@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { FirebaseAuthService } from './services/firebase/authService';
 import { useAuthStore } from './store/authStore';
 import { Header } from './components/layout/Header';
 import { LoginForm } from './components/auth/LoginForm';
@@ -23,85 +22,27 @@ import { AutomationDashboard } from './components/automation/AutomationDashboard
 import { OrganizationDashboard } from './components/organization/OrganizationDashboard';
 import { Documentation } from './components/docs/Documentation';
 import { GamificationAdminPanel } from './components/gamification/admin/GamificationAdminPanel';
-import { DatabaseAuditPanel } from './components/admin/DatabaseAuditPanel';
-import { DatabaseStatus } from './components/admin/DatabaseStatus';
 import { DatabaseDiagnostic } from './components/admin/DatabaseDiagnostic';
 import { Reports } from './components/reports/Reports';
 
 const App: React.FC = () => {
-  const { isAuthenticated, setUser, clearUser, isLoading, setLoading } = useAuthStore();
+  const { isAuthenticated, isLoading, initialize } = useAuthStore();
   
   console.log('App rendering, authenticated:', isAuthenticated);
 
-  // Initialize auth state and listen for changes
+  // Initialize auth state on mount
   useEffect(() => {
-    let mounted = true;
-
-    const initializeAuth = async () => {
-      try {
-        console.log('🔄 Initializing auth...');
-        
-        const user = await FirebaseAuthService.getCurrentUser();
-        if (user) {
-          console.log('✅ Found existing user session:', user.email);
-          setUser(user);
-        } else {
-          console.log('ℹ️ No existing user session found');
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error('❌ Error initializing auth:', error);
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    initializeAuth();
-
-    // Listen for Firebase auth state changes
-    const unsubscribe = FirebaseAuthService.onAuthStateChanged((user) => {
-      if (!mounted) return;
-      
-      if (user) {
-        console.log('✅ Firebase user signed in:', user.email);
-        setUser(user);
-      } else {
-        console.log('🚪 Firebase user signed out');
-        clearUser();
-      }
-    });
-
-    return () => {
-      mounted = false;
-      unsubscribe();
-    };
-  }, [setUser, clearUser, setLoading]);
-
-  // Set up auth state listener separately to avoid dependency issues
-  useEffect(() => {
-    const unsubscribe = FirebaseAuthService.onAuthStateChanged((user) => {
-      if (user) {
-        console.log('🔐 Auth state change: User signed in');
-        setUser(user);
-      } else {
-        console.log('🔐 Auth state change: User signed out');
-        if (isAuthenticated) {
-          clearUser();
-        }
-      }
-    });
-
-    return unsubscribe;
-  }, [setUser, clearUser, isAuthenticated]);
+    console.log('🔄 Initializing Supabase auth...');
+    initialize();
+  }, [initialize]);
 
   // Show loading state while checking authentication
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-dark-500 to-dark-100">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Checking authentication...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
+          <p className="text-gray-300">Checking authentication...</p>
           <p className="text-sm text-gray-500 mt-2">This should only take a few seconds</p>
         </div>
       </div>
@@ -109,7 +50,7 @@ const App: React.FC = () => {
   }
   
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-dark-500 via-dark-300 to-dark-100">
       {isAuthenticated && <Header />}
       
       <main className={`${isAuthenticated ? 'pt-16' : ''}`}>
@@ -200,11 +141,6 @@ const App: React.FC = () => {
               <Settings />
             </PrivateRoute>
           } />
-          <Route path="/admin/database" element={
-            <PrivateRoute>
-              <DatabaseAuditPanel />
-            </PrivateRoute>
-          } />
           <Route path="/admin/diagnostic" element={
             <PrivateRoute>
               <DatabaseDiagnostic />
@@ -217,9 +153,6 @@ const App: React.FC = () => {
           } />
         </Routes>
       </main>
-      
-      {/* Database Status Indicator */}
-      {isAuthenticated && <DatabaseStatus />}
     </div>
   );
 };
