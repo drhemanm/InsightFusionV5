@@ -1,97 +1,237 @@
 import { create } from 'zustand';
-import { 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword, 
-  signOut, 
-  onAuthStateChanged,
-  User as FirebaseUser
-} from 'firebase/auth';
-import { auth } from '../config/firebase';
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: 'admin' | 'agent' | 'user';
-}
+import { supabase, authHelpers, getCurrentUser } from '../config/supabase';
+import type { User } from '@supabase/supabase-js';
 
 interface AuthState {
   user: User | null;
+  profile: any | null;
   isLoading: boolean;
+  isAuthenticated: boolean;
   error: string | null;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name: string) => Promise<void>;
-  logout: () => Promise<void>;
+  
+  // Actions
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, fullName: string) => Promise<void>;
+  signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+  updatePassword: (newPassword: string) => Promise<void>;
+  initialize: () => Promise<void>;
   clearError: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
-  isLoading: false,
+  profile: null,
+  isLoading: true,
+  isAuthenticated: false,
   error: null,
 
-  login: async (email: string, password: string) => {
+  initialize: async () => {
+    try {
+      console.log('🔄 Initializing auth...');
+      
+      // Get current session
+      const session = await authHelpers.getSession();
+      
+      if (session?.user) {
+        console.log('✅ User authenticated:', session.user.email);
+        
+        // Get user profile from database
+        const profile = await getCurrentUser();
+        
+        set({
+          user: session.user,
+          profile,
+          isAuthenticated: true,
+          isLoading: false,
+        });
+      } else {
+        console.log('ℹ️ No active session');
+        set({
+          user: null,
+          profile: null,
+          isAuthenticated: false,
+          isLoading: false,
+        });
+      }
+
+      // Listen for auth changes
+      authHelpers.onAuthStateChange((session) => {
+        console.log('🔄 Auth state changed:', session?.user?.email || 'signed out');
+        
+        if (session?.user) {
+          getCurrentUser().then(profile => {
+            set({
+              user: session.user,
+              profile,
+              isAuthenticated: true,
+            });
+          });
+        } else {
+          set({
+            user: null,
+            profile: null,
+            isAuthenticated: false,
+          });
+        }
+      });
+    } catch (error) {
+      console.error('❌ Auth initialization error:', error);
+      set({
+        error: error instanceof Error ? error.message : 'Failed to initialize auth',
+        isLoading: false,
+      });
+    }
+  },
+
+  signIn: async (email: string, password: string) => {
     set({ isLoading: true, error: null });
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const firebaseUser = userCredential.user;
+      console.log('🔄 Signing in:', email);
       
-      const user: User = {
-        id: firebaseUser.uid,
-        email: firebaseUser.email || '',
-        name: firebaseUser.displayName || 'User',
-        role: 'user'
-      };
+      const { data, error } = await authHelpers.signIn(email, password);
       
-      set({ user, isLoading: false });
-    } catch (error: any) {
-      set({ error: error.message, isLoading: false });
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      if (data.user) {
+        const profile = await getCurrentUser();
+        
+        set({
+          user: data.user,
+          profile,
+          isAuthenticated: true,
+          isLoading: false,
+        });
+        
+        console.log('✅ Sign in successful');
+      }
+    } catch (error) {
+      console.error('❌ Sign in error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to sign in';
+      set({
+        error: errorMessage,
+        isLoading: false,
+      });
+      throw error;
     }
   },
 
-  register: async (email: string, password: string, name: string) => {
+  signUp: async (email: string, password: string, fullName: string) => {
     set({ isLoading: true, error: null });
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const firebaseUser = userCredential.user;
+      console.log('🔄 Signing up:', email);
       
-      const user: User = {
-        id: firebaseUser.uid,
-        email: firebaseUser.email || '',
-        name: name,
-        role: 'user'
-      };
+      const { data, error } = await authHelpers.signUp(email, password, fullName);
       
-      set({ user, isLoading: false });
-    } catch (error: any) {
-      set({ error: error.message, isLoading: false });
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      console.log('✅ Sign up successful - check email for confirmation');
+      
+      set({
+        isLoading: false,
+        error: 'Please check your email to confirm your account',
+      });
+    } catch (error) {
+      console.error('❌ Sign up error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to sign up';
+      set({
+        error: errorMessage,
+        isLoading: false,
+      });
+      throw error;
     }
   },
 
-  logout: async () => {
-    set({ isLoading: true });
+  signOut: async () => {
+    set({ isLoading: true, error: null });
     try {
-      await signOut(auth);
-      set({ user: null, isLoading: false });
-    } catch (error: any) {
-      set({ error: error.message, isLoading: false });
+      console.log('🔄 Signing out...');
+      
+      const { error } = await authHelpers.signOut();
+      
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      set({
+        user: null,
+        profile: null,
+        isAuthenticated: false,
+        isLoading: false,
+      });
+      
+      console.log('✅ Sign out successful');
+    } catch (error) {
+      console.error('❌ Sign out error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to sign out';
+      set({
+        error: errorMessage,
+        isLoading: false,
+      });
+      throw error;
     }
   },
 
-  clearError: () => set({ error: null })
+  resetPassword: async (email: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      console.log('🔄 Requesting password reset for:', email);
+      
+      const { error } = await authHelpers.resetPassword(email);
+      
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      set({
+        isLoading: false,
+        error: 'Password reset email sent - check your inbox',
+      });
+      
+      console.log('✅ Password reset email sent');
+    } catch (error) {
+      console.error('❌ Password reset error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to send reset email';
+      set({
+        error: errorMessage,
+        isLoading: false,
+      });
+      throw error;
+    }
+  },
+
+  updatePassword: async (newPassword: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      console.log('🔄 Updating password...');
+      
+      const { error } = await authHelpers.updatePassword(newPassword);
+      
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      set({
+        isLoading: false,
+      });
+      
+      console.log('✅ Password updated successfully');
+    } catch (error) {
+      console.error('❌ Password update error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update password';
+      set({
+        error: errorMessage,
+        isLoading: false,
+      });
+      throw error;
+    }
+  },
+
+  clearError: () => {
+    set({ error: null });
+  },
 }));
-
-// Initialize auth state listener
-onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
-  if (firebaseUser) {
-    const user: User = {
-      id: firebaseUser.uid,
-      email: firebaseUser.email || '',
-      name: firebaseUser.displayName || 'User',
-      role: 'user'
-    };
-    useAuthStore.setState({ user, isLoading: false });
-  } else {
-    useAuthStore.setState({ user: null, isLoading: false });
-  }
-});
