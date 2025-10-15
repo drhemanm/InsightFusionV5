@@ -1,298 +1,319 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Brain, Sparkles, Bot, LineChart, Users, Shield, ArrowRight, CheckCircle, Star, Zap } from 'lucide-react';
+import { Zap, Brain, TrendingUp, Shield, Users, Sparkles, ArrowRight, Check } from 'lucide-react';
 
 export const LandingPage: React.FC = () => {
-  const features = [
-    {
-      icon: Bot,
-      title: 'AI-Powered Insights',
-      description: 'Get intelligent recommendations and predictions for your sales pipeline with advanced machine learning'
-    },
-    {
-      icon: LineChart,
-      title: 'Advanced Analytics',
-      description: 'Deep insights into your sales performance with customizable dashboards and real-time reporting'
-    },
-    {
-      icon: Users,
-      title: 'Team Collaboration',
-      description: 'Work seamlessly with your team members, share insights, and track progress in real-time'
-    },
-    {
-      icon: Shield,
-      title: 'Enterprise Security',
-      description: 'Bank-grade security with advanced encryption, SOC 2 compliance, and GDPR readiness'
-    }
-  ];
-
-  const plans = [
-    {
-      id: 'basic',
-      name: 'Basic',
-      price: 200,
-      description: 'Perfect for small teams getting started',
-      features: [
-        'Up to 5 team members',
-        '1,000 contacts',
-        'Core CRM features',
-        'Basic reporting',
-        '10GB storage',
-        'Email support'
-      ],
-      popular: false
-    },
-    {
-      id: 'professional',
-      name: 'Professional',
-      price: 400,
-      description: 'Best for growing businesses',
-      features: [
-        'Up to 20 team members',
-        '10,000 contacts',
-        'Advanced analytics',
-        'AI-powered insights',
-        'API access',
-        '50GB storage',
-        'Priority support'
-      ],
-      popular: true
-    },
-    {
-      id: 'enterprise',
-      name: 'Enterprise',
-      price: 600,
-      description: 'For large organizations',
-      features: [
-        'Unlimited team members',
-        'Unlimited contacts',
-        'Custom integrations',
-        'White-label options',
-        'Dedicated support',
-        '500GB storage',
-        'SLA guarantees'
-      ],
-      popular: false
-    }
-  ];
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
-      {/* Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-indigo-500 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-pulse delay-500"></div>
+    <div className="min-h-screen bg-dark-500 text-white overflow-hidden">
+      {/* Animated background */}
+      <div className="fixed inset-0 opacity-20">
+        <div className="absolute top-0 -left-4 w-96 h-96 bg-primary-500 rounded-full mix-blend-multiply filter blur-3xl animate-float"></div>
+        <div className="absolute top-0 -right-4 w-96 h-96 bg-accent-500 rounded-full mix-blend-multiply filter blur-3xl animate-float animation-delay-2000"></div>
+        <div className="absolute -bottom-8 left-20 w-96 h-96 bg-primary-400 rounded-full mix-blend-multiply filter blur-3xl animate-float animation-delay-4000"></div>
       </div>
 
-      {/* Navigation */}
-      <nav className="relative z-10 px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Brain className="h-8 w-8 text-blue-400" />
-            <span className="text-xl font-bold text-white">InsightFusion</span>
+      {/* Navbar */}
+      <nav className="relative z-10 px-6 py-4 flex items-center justify-between border-b border-primary-500/20 backdrop-blur-xl">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-primary-400 to-accent-400 rounded-xl flex items-center justify-center shadow-glow-cyan">
+            <Zap className="text-dark-500" size={24} />
           </div>
-          <div className="flex items-center gap-4">
-            <Link
-              to="/login"
-              className="text-white hover:text-blue-200 font-medium transition-colors"
-            >
-              Sign In
-            </Link>
-            <Link
-              to="/register"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 hover:shadow-lg"
-            >
-              Get Started
-            </Link>
-          </div>
+          <span className="text-2xl font-bold bg-gradient-to-r from-primary-400 to-accent-400 bg-clip-text text-transparent">
+            InsightFusion
+          </span>
+        </div>
+        
+        <div className="flex items-center gap-4">
+          <Link
+            to="/login"
+            className="px-6 py-2 text-gray-300 hover:text-white transition-colors"
+          >
+            Sign In
+          </Link>
+          <Link
+            to="/register"
+            className="px-6 py-2 bg-gradient-to-r from-primary-500 to-accent-500 rounded-lg font-medium hover:shadow-glow-cyan transition-all"
+          >
+            Get Started
+          </Link>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <div className="relative z-10 max-w-7xl mx-auto px-6 pt-20 pb-32">
-        <div className="text-center mb-16">
-          <h1 className="text-5xl md:text-7xl font-bold text-white mb-8 leading-tight">
-            <span className="bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent">
-              Sales Intelligence
-            </span>
-            <br />
-            <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400 bg-clip-text text-transparent">
-              Reimagined
-            </span>
-          </h1>
-          
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-12 leading-relaxed">
-            Transform your customer relationships with AI-powered insights, automated workflows, and intelligent sales coaching. 
-            Built for teams that demand excellence.
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-            <Link
-              to="/register"
-              className="group relative overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/25 hover:scale-105"
-            >
-              <div className="flex items-center gap-3">
-                <span>Start Free Trial</span>
-                <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-            </Link>
-            
-            <Link
-              to="/demo"
-              className="group bg-white/10 hover:bg-white/20 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 backdrop-blur-sm border border-white/20 hover:border-white/30"
-            >
-              <div className="flex items-center gap-3">
-                <span>Watch Demo</span>
-                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-              </div>
-            </Link>
+      <div className="relative z-10 container mx-auto px-6 pt-20 pb-32">
+        <div className="text-center max-w-5xl mx-auto">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary-500/10 border border-primary-500/30 rounded-full mb-8">
+            <Sparkles size={16} className="text-accent-400" />
+            <span className="text-sm">AI-Powered CRM for Modern Teams</span>
           </div>
 
-          <div className="flex items-center justify-center gap-8 text-sm text-gray-400">
+          {/* Main Headline */}
+          <h1 className="text-6xl md:text-7xl font-bold mb-6 leading-tight">
+            Close Deals{' '}
+            <span className="bg-gradient-to-r from-primary-400 via-accent-400 to-primary-400 bg-clip-text text-transparent animate-shimmer bg-[length:200%_100%]">
+              Faster
+            </span>
+            <br />
+            With AI Intelligence
+          </h1>
+
+          {/* Subheadline */}
+          <p className="text-xl text-gray-400 mb-12 max-w-3xl mx-auto leading-relaxed">
+            Stop wasting time on manual data entry. Let AI handle the boring stuff while you focus on building relationships and closing deals.
+          </p>
+
+          {/* CTA Buttons */}
+          <div className="flex items-center justify-center gap-4 mb-16">
+            <Link
+              to="/register"
+              className="group px-8 py-4 bg-gradient-to-r from-primary-500 to-accent-500 rounded-xl font-bold text-lg hover:shadow-glow-cyan transition-all flex items-center gap-2"
+            >
+              Start Free Trial
+              <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+            </Link>
+            <button className="px-8 py-4 bg-dark-200/50 backdrop-blur-xl border border-primary-500/30 rounded-xl font-bold text-lg hover:bg-dark-200 transition-all">
+              Watch Demo
+            </button>
+          </div>
+
+          {/* Trust Badges */}
+          <div className="flex items-center justify-center gap-8 text-sm text-gray-500">
             <div className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-400" />
+              <Check size={16} className="text-accent-400" />
               <span>No credit card required</span>
             </div>
             <div className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-400" />
+              <Check size={16} className="text-accent-400" />
               <span>14-day free trial</span>
             </div>
             <div className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-400" />
+              <Check size={16} className="text-accent-400" />
               <span>Cancel anytime</span>
             </div>
           </div>
         </div>
 
-        {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-24">
-          {features.map((feature, index) => {
-            const Icon = feature.icon;
-            return (
-              <div
-                key={index}
-                className="group relative p-8 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 hover:bg-white/10 transition-all duration-300 hover:scale-105 hover:shadow-xl"
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="relative">
-                  <div className="p-3 bg-blue-500/20 rounded-xl w-fit mb-6 group-hover:scale-110 transition-transform duration-300">
-                    <Icon className="h-8 w-8 text-blue-400" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-white mb-4">{feature.title}</h3>
-                  <p className="text-gray-300 leading-relaxed">{feature.description}</p>
-                </div>
-              </div>
-            );
-          })}
+        {/* Feature Cards */}
+        <div className="grid md:grid-cols-4 gap-6 mt-32">
+          <FeatureCard
+            icon={Brain}
+            title="AI Lead Scoring"
+            description="Automatically prioritize your hottest leads with machine learning"
+            color="primary"
+          />
+          <FeatureCard
+            icon={TrendingUp}
+            title="Smart Forecasting"
+            description="Predict revenue with 95% accuracy using AI models"
+            color="accent"
+          />
+          <FeatureCard
+            icon={Zap}
+            title="Auto Workflows"
+            description="Automate follow-ups, emails, and tasks intelligently"
+            color="primary"
+          />
+          <FeatureCard
+            icon={Shield}
+            title="Enterprise Security"
+            description="Bank-grade encryption with SOC 2 compliance"
+            color="accent"
+          />
         </div>
+      </div>
 
-        {/* Pricing Section */}
-        <div className="text-center mb-24">
-          <h2 className="text-4xl font-bold text-white mb-4">Choose Your Plan</h2>
-          <p className="text-xl text-gray-300 mb-12 max-w-2xl mx-auto">
-            Start with a plan that fits your business needs. All plans include a 14-day free trial.
-          </p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {plans.map((plan) => (
-              <div
-                key={plan.id}
-                className={`relative p-8 rounded-2xl border transition-all duration-300 hover:scale-105 ${
-                  plan.popular
-                    ? 'bg-gradient-to-br from-blue-600/20 to-purple-600/20 backdrop-blur-sm border-2 border-blue-400/50 hover:border-blue-400/70'
-                    : 'bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10'
-                }`}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2">
-                      <Star className="h-4 w-4" />
-                      Most Popular
-                    </span>
-                  </div>
-                )}
-                
-                <div className="text-center">
-                  <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
-                  <p className="text-gray-300 mb-6">{plan.description}</p>
-                  
-                  <div className="flex items-baseline justify-center mb-8">
-                    <span className="text-5xl font-bold text-white">MUR {plan.price}</span>
-                    <span className="text-gray-300 ml-2 text-lg">/month</span>
-                  </div>
-                  
-                  <ul className="space-y-4 mb-8 text-left">
-                    {plan.features.map((feature, index) => (
-                      <li key={index} className="flex items-center gap-3 text-white">
-                        <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0" />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  
-                  <Link
-                    to="/register"
-                    state={{ selectedPlan: plan.id }}
-                    className={`block w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
-                      plan.popular
-                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white hover:shadow-xl hover:shadow-blue-500/25'
-                        : 'bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm border border-white/20 hover:border-white/30'
-                    }`}
-                  >
-                    {plan.popular ? 'Start Free Trial' : 'Get Started'}
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* CTA Section */}
-        <div className="text-center bg-gradient-to-r from-blue-600/20 to-purple-600/20 backdrop-blur-sm rounded-3xl p-12 border border-white/10">
-          <h2 className="text-4xl font-bold text-white mb-6">
-            Ready to Transform Your Sales?
-          </h2>
-          <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-            Join thousands of businesses already using InsightFusion to accelerate their sales and improve customer relationships.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
-            <Link
-              to="/register"
-              className="group relative overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/25 hover:scale-105"
-            >
-              <div className="flex items-center gap-3">
-                <span>Get Started Free</span>
-                <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-            </Link>
-            <Link
-              to="/contact"
-              className="text-white hover:text-blue-200 font-medium transition-colors"
-            >
-              Talk to Sales
-            </Link>
-          </div>
-          
-          {/* Trust Indicators */}
-          <div className="flex items-center justify-center gap-8 text-sm text-gray-400">
-            <div className="flex items-center gap-2">
-              <Shield className="h-4 w-4" />
-              <span>SOC 2 Compliant</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Zap className="h-4 w-4" />
-              <span>99.9% Uptime</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4" />
-              <span>GDPR Ready</span>
-            </div>
+      {/* Stats Section */}
+      <div className="relative z-10 border-y border-primary-500/20 backdrop-blur-xl">
+        <div className="container mx-auto px-6 py-16">
+          <div className="grid md:grid-cols-3 gap-12 text-center">
+            <StatItem number="10x" label="Faster Deal Closing" />
+            <StatItem number="95%" label="Lead Scoring Accuracy" />
+            <StatItem number="50K+" label="Happy Users Worldwide" />
           </div>
         </div>
       </div>
+
+      {/* Pricing Section */}
+      <div className="relative z-10 container mx-auto px-6 py-32">
+        <div className="text-center mb-16">
+          <h2 className="text-5xl font-bold mb-4">
+            Simple,{' '}
+            <span className="bg-gradient-to-r from-primary-400 to-accent-400 bg-clip-text text-transparent">
+              Transparent
+            </span>{' '}
+            Pricing
+          </h2>
+          <p className="text-xl text-gray-400">
+            Start free. Scale as you grow. No hidden fees.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <PricingCard
+            name="Starter"
+            price="Free"
+            description="Perfect for solo entrepreneurs"
+            features={[
+              'Up to 100 contacts',
+              'Basic CRM features',
+              'Email integration',
+              'Mobile app access',
+              'Community support'
+            ]}
+            buttonText="Start Free"
+            popular={false}
+          />
+          
+          <PricingCard
+            name="Professional"
+            price="$49"
+            period="/month"
+            description="For growing sales teams"
+            features={[
+              'Unlimited contacts',
+              'AI lead scoring',
+              'Advanced analytics',
+              'Workflow automation',
+              'Priority support',
+              'API access'
+            ]}
+            buttonText="Start Trial"
+            popular={true}
+          />
+          
+          <PricingCard
+            name="Enterprise"
+            price="Custom"
+            description="For large organizations"
+            features={[
+              'Everything in Pro',
+              'Custom AI models',
+              'Dedicated support',
+              'SSO & SAML',
+              'Advanced security',
+              'Custom integrations'
+            ]}
+            buttonText="Contact Sales"
+            popular={false}
+          />
+        </div>
+      </div>
+
+      {/* CTA Section */}
+      <div className="relative z-10 container mx-auto px-6 pb-32">
+        <div className="bg-gradient-to-r from-primary-500/20 to-accent-500/20 border border-primary-500/30 rounded-3xl p-16 text-center backdrop-blur-xl">
+          <h2 className="text-4xl font-bold mb-4">
+            Ready to Transform Your Sales?
+          </h2>
+          <p className="text-xl text-gray-400 mb-8">
+            Join thousands of teams already closing deals faster with AI
+          </p>
+          <Link
+            to="/register"
+            className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-primary-500 to-accent-500 rounded-xl font-bold text-lg hover:shadow-glow-cyan transition-all"
+          >
+            Get Started Free
+            <ArrowRight size={20} />
+          </Link>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <footer className="relative z-10 border-t border-primary-500/20 backdrop-blur-xl">
+        <div className="container mx-auto px-6 py-12">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-primary-400 to-accent-400 rounded-lg flex items-center justify-center">
+                <Zap className="text-dark-500" size={18} />
+              </div>
+              <span className="font-bold text-gray-400">© 2025 InsightFusion</span>
+            </div>
+            <div className="flex gap-8 text-gray-400">
+              <a href="#" className="hover:text-primary-400 transition-colors">Privacy</a>
+              <a href="#" className="hover:text-primary-400 transition-colors">Terms</a>
+              <a href="#" className="hover:text-primary-400 transition-colors">Contact</a>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
+
+// Helper Components
+const FeatureCard: React.FC<{
+  icon: any;
+  title: string;
+  description: string;
+  color: 'primary' | 'accent';
+}> = ({ icon: Icon, title, description, color }) => {
+  const colorClasses = color === 'primary' 
+    ? 'from-primary-500/20 to-primary-400/10 border-primary-500/30 hover:shadow-glow-cyan'
+    : 'from-accent-500/20 to-accent-400/10 border-accent-500/30 hover:shadow-glow-lime';
+
+  return (
+    <div className={`bg-gradient-to-br ${colorClasses} border backdrop-blur-xl rounded-2xl p-6 hover:-translate-y-1 transition-all duration-300`}>
+      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${color === 'primary' ? 'from-primary-500 to-primary-600' : 'from-accent-500 to-accent-600'} flex items-center justify-center mb-4`}>
+        <Icon size={24} />
+      </div>
+      <h3 className="text-xl font-bold mb-2">{title}</h3>
+      <p className="text-gray-400">{description}</p>
+    </div>
+  );
+};
+
+const StatItem: React.FC<{ number: string; label: string }> = ({ number, label }) => (
+  <div>
+    <div className="text-5xl font-bold bg-gradient-to-r from-primary-400 to-accent-400 bg-clip-text text-transparent mb-2">
+      {number}
+    </div>
+    <div className="text-gray-400">{label}</div>
+  </div>
+);
+
+const PricingCard: React.FC<{
+  name: string;
+  price: string;
+  period?: string;
+  description: string;
+  features: string[];
+  buttonText: string;
+  popular: boolean;
+}> = ({ name, price, period, description, features, buttonText, popular }) => (
+  <div className={`relative bg-dark-200/50 backdrop-blur-xl border ${popular ? 'border-primary-500 shadow-glow-cyan' : 'border-primary-500/20'} rounded-2xl p-8 hover:-translate-y-1 transition-all`}>
+    {popular && (
+      <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-primary-500 to-accent-500 rounded-full text-sm font-bold">
+        Most Popular
+      </div>
+    )}
+    
+    <h3 className="text-2xl font-bold mb-2">{name}</h3>
+    <p className="text-gray-400 mb-6">{description}</p>
+    
+    <div className="mb-6">
+      <span className="text-5xl font-bold">{price}</span>
+      {period && <span className="text-gray-400">{period}</span>}
+    </div>
+    
+    <Link
+      to="/register"
+      className={`block w-full py-3 rounded-xl font-bold text-center mb-6 transition-all ${
+        popular
+          ? 'bg-gradient-to-r from-primary-500 to-accent-500 hover:shadow-glow-cyan'
+          : 'bg-dark-300 hover:bg-dark-200 border border-primary-500/30'
+      }`}
+    >
+      {buttonText}
+    </Link>
+    
+    <ul className="space-y-3">
+      {features.map((feature, index) => (
+        <li key={index} className="flex items-start gap-3">
+          <Check size={20} className="text-accent-400 flex-shrink-0 mt-0.5" />
+          <span className="text-gray-300">{feature}</span>
+        </li>
+      ))}
+    </ul>
+  </div>
+);
