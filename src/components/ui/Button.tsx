@@ -22,14 +22,14 @@ export const Button: React.FC<ButtonProps> = ({
   className = '',
   ...props
 }) => {
-  const baseStyles = 'inline-flex items-center justify-center gap-2 font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-dark-500 disabled:opacity-50 disabled:cursor-not-allowed';
+  const baseStyles = 'inline-flex items-center justify-center gap-2 font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white disabled:opacity-50 disabled:cursor-not-allowed';
 
   const variants = {
-    primary: 'bg-gradient-to-r from-primary-500 to-accent-500 text-dark-500 hover:shadow-glow-cyan hover:scale-105 focus:ring-primary-500',
-    secondary: 'bg-dark-300 text-gray-200 border border-primary-500/30 hover:bg-dark-200 hover:border-primary-500/50 focus:ring-primary-500',
-    ghost: 'text-gray-300 hover:bg-dark-300/50 hover:text-primary-400 focus:ring-primary-500',
-    danger: 'bg-error text-white hover:bg-error/90 hover:shadow-lg focus:ring-error',
-    success: 'bg-accent-500 text-dark-500 hover:bg-accent-400 hover:shadow-glow-lime focus:ring-accent-500'
+    primary: 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:shadow-glow-pink hover:scale-105 focus:ring-purple-500',
+    secondary: 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:border-gray-400 focus:ring-gray-300',
+    ghost: 'text-gray-700 hover:bg-gray-100 hover:text-purple-600 focus:ring-gray-300',
+    danger: 'bg-red-500 text-white hover:bg-red-600 hover:shadow-lg focus:ring-red-500',
+    success: 'bg-green-500 text-white hover:bg-green-600 hover:shadow-lg focus:ring-green-500'
   };
 
   const sizes = {
