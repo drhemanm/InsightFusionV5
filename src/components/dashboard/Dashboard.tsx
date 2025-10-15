@@ -5,8 +5,6 @@ import {
   DollarSign, 
   CheckSquare,
   Plus,
-  ArrowUpRight,
-  ArrowDownRight,
   Calendar,
   Sparkles
 } from 'lucide-react';
@@ -61,19 +59,19 @@ export const Dashboard: React.FC = () => {
   const contactsGrowth = ((newContactsThisMonth / Math.max(totalContacts, 1)) * 100).toFixed(1);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
       <div className="max-w-screen-2xl mx-auto space-y-8">
         
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <h1 className="text-3xl font-bold text-gray-900">
                 Welcome Back! 
               </h1>
-              <span className="text-3xl">👋</span>
+              <span className="text-2xl">👋</span>
             </div>
-            <p className="text-gray-600 text-lg">
+            <p className="text-gray-600">
               Here's what's happening with your business today
             </p>
           </div>
@@ -93,7 +91,7 @@ export const Dashboard: React.FC = () => {
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[1, 2, 3, 4].map(i => (
-              <Card key={i} variant="glass">
+              <Card key={i} variant="default">
                 <Skeleton variant="rectangular" height={120} />
               </Card>
             ))}
@@ -112,21 +110,21 @@ export const Dashboard: React.FC = () => {
               value={totalContacts.toString()}
               change={+Number(contactsGrowth)}
               icon={<Users size={24} />}
-              iconBgColor="from-blue-400 to-cyan-500"
+              iconBgColor="from-blue-400 to-blue-500"
             />
             <StatsCard
               title="Active Deals"
               value={totalDeals.toString()}
               change={+Number(dealsGrowth)}
               icon={<TrendingUp size={24} />}
-              iconBgColor="from-purple-400 to-pink-500"
+              iconBgColor="from-indigo-400 to-indigo-500"
             />
             <StatsCard
               title="Open Tickets"
               value={openTickets.toString()}
               change={-8.2}
               icon={<CheckSquare size={24} />}
-              iconBgColor="from-orange-400 to-red-500"
+              iconBgColor="from-orange-400 to-orange-500"
             />
           </div>
         )}
@@ -152,7 +150,7 @@ export const Dashboard: React.FC = () => {
             <UpcomingTasks isLoading={isLoading} />
 
             {/* Top Contacts */}
-            <Card variant="glass">
+            <Card variant="default">
               <CardHeader 
                 title="Top Contacts"
                 subtitle="Most active this month"
@@ -167,7 +165,7 @@ export const Dashboard: React.FC = () => {
                     {contacts?.slice(0, 5).map((contact, index) => (
                       <div 
                         key={contact.id}
-                        className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/50 transition-colors cursor-pointer"
+                        className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
                       >
                         <Avatar 
                           name={`${contact.firstName} ${contact.lastName}`}
